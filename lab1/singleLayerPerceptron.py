@@ -53,12 +53,13 @@ class Perceptron():
         data = data.transpose()
 
         self.weights = np.random.normal(0, 0.5, (1, 3))
-
+        print(self.weights @ data)
+        print(labels)
         for _ in range(self.n_epochs):
             delta_weights = np.zeros((1, self.n_inputs))
             delta_weights = -self.learning_rate * \
                 (self.weights @ data  - labels) @ (data.transpose())
-            self.weights -= delta_weights
+            self.weights += delta_weights
 
     def extend_data_with_bias(self, data):
         '''
@@ -113,7 +114,7 @@ def plot_decision_boundary(data, weights):
 
     print(weights)
     w_slope = weights[0,1] / weights[0,0]
-    v_slope = 1/w_slope
+    v_slope = -1/w_slope
     v_x = np.linspace(-4, 4, 100)
     v_y = v_slope * v_x
     plt.plot(v_x, v_y, label='Decision boundary')
@@ -136,7 +137,7 @@ def test_delta_learning():
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-    perceptron = Perceptron(learning_method="delta", learning_rate=0.5, n_epochs=20)
+    perceptron = Perceptron(learning_method="delta", learning_rate=0.05, n_epochs=50)
     perceptron.fit(patterns_train, targets_train)
 
     n_correct = 0
