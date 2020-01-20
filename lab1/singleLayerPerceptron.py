@@ -37,7 +37,6 @@ class Perceptron():
         '''
         Fit classifier using perceptron learning
         '''
-<<<<<<< HEAD
         self.weights = np.random.normal(
             0, 0.5, (self.n_outputs, self.n_inputs+1))
         data = self.extend_data_with_bias(data[0:2])
@@ -61,31 +60,6 @@ class Perceptron():
                     self.weights = self.weights - \
                         self.learning_rate * data[:, i]
 
-        # def delta_fit(self, data, labels, n_epochs=None):
-        #     print("Label shape" + str(labels.shape))
-        #     print("Data shape" + str(data.shape))
-
-        #     if not n_epochs:
-        #         n_epochs = self.n_epochs
-        #     data = self.extend_data_with_bias(data)
-        #     self.weights = np.random.normal(0, 0.5, (1, self.n_inputs+1))
-
-        #     for _ in range(self.n_epochs):
-        #         delta_weights = np.zeros((1, self.n_inputs+1))
-        #         print(self.weights.dot(data).shape)
-        #         print(self.weights.dot(data).dot(data.transpose()).shape)
-        #         delta_weights = -self.learning_rate * \
-        #             (self.weights.dot(data) - labels).dot(data.transpose())
-        #         self.weights += delta_weights
-=======
-        self.weights = np.random.normal(0, 0.5, self.n_inputs+1)
-        data = self.extend_data_with_bias(data)
-        inputs = data[:, 0]
-        outputs = data[:, 1]
-        for i in range(self.n_epochs):
-            pass
-        print(data)
-
     def delta_fit(self, data, labels, n_epochs=None):
         if not n_epochs:
             n_epochs = self.n_epochs
@@ -98,9 +72,8 @@ class Perceptron():
         for _ in range(self.n_epochs):
             delta_weights = np.zeros((1, self.n_inputs))
             delta_weights = -self.learning_rate * \
-                (self.weights @ data  - labels) @ (data.transpose())
+                (self.weights @ data - labels) @ (data.transpose())
             self.weights -= delta_weights
->>>>>>> b1c3acb9b4f76fb467f245867aa846240a6e2086
 
     def extend_data_with_bias(self, data):
         '''
@@ -115,6 +88,8 @@ class Perceptron():
 n_data = 10
 data = generate_data(n_data).T
 node = Perceptron()
+
+# hej
 node.fit(data, data[2])
 
 # %%
@@ -124,21 +99,12 @@ def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-<<<<<<< HEAD
-    meanA = [1, 3]
-    covA = np.array([[0.5, 0],
-                     [0, 0.8]])
-    meanB = [-1, -2]
-    covB = np.array([[0.8, 0],
-                     [0, 0.3]])
-=======
     meanA = [3, 3]
     covA = np.array([[0.2, 0],
                      [0, 0.8]])
     meanB = [-3, 3]
     covB = np.array([[0.5, 0],
                      [0, 0.5]])
->>>>>>> b1c3acb9b4f76fb467f245867aa846240a6e2086
     classA = np.random.multivariate_normal(meanA, covA, N)
     classB = np.random.multivariate_normal(meanB, covB, N)
     classA_extended = np.column_stack([classA, np.ones(N)])
@@ -156,6 +122,7 @@ def generate_data(N, plot=False):
 
     return data
 
+
 def plot_decision_boundary(data, weights):
     """Take weights and plot corresponding decision boundary (2d).
 
@@ -169,7 +136,7 @@ def plot_decision_boundary(data, weights):
     plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
 
     print(weights)
-    w_slope = weights[0,1] / weights[0,0]
+    w_slope = weights[0, 1] / weights[0, 0]
     v_slope = 1/w_slope
     v_x = np.linspace(-4, 4, 100)
     v_y = v_slope * v_x
@@ -178,26 +145,12 @@ def plot_decision_boundary(data, weights):
     plt.show()
 
 
-
-
 def test_delta_learning():
     # Test delta learning
     n_data = 50
     n_train_samples = 25
     n_test_samples = n_data - n_train_samples
 
-<<<<<<< HEAD
-n_correct = 0
-n_incorrect = 0
-for test_sample in zip(patterns_test, targets_test):
-    test_pattern = np.reshape(test_sample[0], (-1, 1))
-    test_target = test_sample[0]
-    prediction = perceptron.predict(test_pattern)
-    if prediction == test_target:
-        n_correct += 1
-    else:
-        n_incorrect += 1
-=======
     data = generate_data(n_data)
 
     patterns_train = data[:n_train_samples, :2]
@@ -205,7 +158,8 @@ for test_sample in zip(patterns_test, targets_test):
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-    perceptron = Perceptron(learning_method="delta", learning_rate=0.5, n_epochs=20)
+    perceptron = Perceptron(learning_method="delta",
+                            learning_rate=0.5, n_epochs=20)
     perceptron.fit(patterns_train, targets_train)
 
     n_correct = 0
@@ -226,4 +180,3 @@ for test_sample in zip(patterns_test, targets_test):
 
 
 test_delta_learning()
->>>>>>> b1c3acb9b4f76fb467f245867aa846240a6e2086
