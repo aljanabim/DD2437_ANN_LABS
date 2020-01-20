@@ -25,8 +25,8 @@ class Perceptron():
             return -1
 
     def fit(self, data, labels):
-        self.n_inputs = len(data)
-        self.n_outputs = len(labels)
+        self.n_inputs = len(data[0:2])
+        self.n_outputs = 1
 
         if self.learning_method == "perceptron":
             self.perceptron_fit(data, labels)
@@ -37,30 +37,45 @@ class Perceptron():
         '''
         Fit classifier using perceptron learning
         '''
-        self.weights = np.random.normal(0, 0.5, self.n_inputs+1)
-        data = self.extend_data_with_bias(data)
-        inputs = data[:, 0]
-        outputs = data[:, 1]
-        for i in range(self.n_epochs):
-            pass
-        print(data)
+        self.weights = np.random.normal(
+            0, 0.5, (self.n_outputs, self.n_inputs+1))
+        data = self.extend_data_with_bias(data[0:2])
+        labels = labels > 0
 
-    def delta_fit(self, data, labels, n_epochs=None):
-        print("Label shape" + str(labels.shape))
-        print("Data shape" + str(data.shape))
+        for i in range(1):  # self.n_epochs):
+            output = np.dot(self.weights, data) > 0
+            check = np.logical_and(output, labels)
+            self.update_weights(data, check, labels)
 
-        if not n_epochs:
-            n_epochs = self.n_epochs
-        data = self.extend_data_with_bias(data)
-        self.weights = np.random.normal(0, 0.5, (1, self.n_inputs+1))
+        print("True", labels)
+        print("Estim", output)
 
-        for _ in range(self.n_epochs):
-            delta_weights = np.zeros((1, self.n_inputs+1))
-            print(self.weights.dot(data).shape)
-            print(self.weights.dot(data).dot(data.transpose()).shape)
-            delta_weights = -self.learning_rate * \
-                (self.weights.dot(data) - labels).dot(data.transpose())
-            self.weights += delta_weights
+    def update_weights(self, data, check, labels):
+        for i in range(len(labels)):
+            if not check[0, i]:
+                if labels[i] < 0:  # -1 but shoud have been 1
+                    self.weights = self.weights + \
+                        self.learning_rate * data[:, i]
+                else:
+                    self.weights = self.weights - \
+                        self.learning_rate * data[:, i]
+
+        # def delta_fit(self, data, labels, n_epochs=None):
+        #     print("Label shape" + str(labels.shape))
+        #     print("Data shape" + str(data.shape))
+
+        #     if not n_epochs:
+        #         n_epochs = self.n_epochs
+        #     data = self.extend_data_with_bias(data)
+        #     self.weights = np.random.normal(0, 0.5, (1, self.n_inputs+1))
+
+        #     for _ in range(self.n_epochs):
+        #         delta_weights = np.zeros((1, self.n_inputs+1))
+        #         print(self.weights.dot(data).shape)
+        #         print(self.weights.dot(data).dot(data.transpose()).shape)
+        #         delta_weights = -self.learning_rate * \
+        #             (self.weights.dot(data) - labels).dot(data.transpose())
+        #         self.weights += delta_weights
 
     def extend_data_with_bias(self, data):
         '''
@@ -71,6 +86,12 @@ class Perceptron():
         return data
 
 
+# Test perceptron learning
+n_data = 10
+data = generate_data(n_data).T
+node = Perceptron()
+node.fit(data, data[2])
+
 # %%
 
 
@@ -79,11 +100,11 @@ def generate_data(N, plot=False):
     Generates data of two linearly seperable classes of N samples
     '''
     meanA = [1, 3]
-    covA = np.array([[0.2, 0],
+    covA = np.array([[0.5, 0],
                      [0, 0.8]])
     meanB = [-1, -2]
     covB = np.array([[0.8, 0],
-                     [0, -0.5]])
+                     [0, 0.3]])
     classA = np.random.multivariate_normal(meanA, covA, N)
     classB = np.random.multivariate_normal(meanB, covB, N)
     classA_extended = np.column_stack([classA, np.zeros(N)])
@@ -133,11 +154,3 @@ for test_sample in zip(patterns_test, targets_test):
         n_correct += 1
     else:
         n_incorrect += 1
-
-# %%
-
-# Test perceptron learning
-n_data = 10
-data = generate_data(n_data)
-node = Perceptron()
-node.fit(data, data[2])
