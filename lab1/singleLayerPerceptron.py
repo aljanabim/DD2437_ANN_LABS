@@ -69,7 +69,7 @@ class Perceptron():
         data = np.column_stack([data, bias_ones])
         data = data.transpose()
 
-        self.weights = np.random.normal(0, 0.5, (1, 3))
+        self.weights = np.random.normal(0, 1, (1, 3))
         print(self.weights @ data)
         print(labels)
         for _ in range(self.n_epochs):
