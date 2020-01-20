@@ -19,7 +19,7 @@ class Perceptron():
 
     def predict(self, x):
         x = self.extend_data_with_bias(x)
-        if int(self.weights.dot(x)) >= 0:
+        if int(self.weights.dot(x)) > 0:
             return 1
         else:
             return -1
@@ -58,7 +58,7 @@ class Perceptron():
             delta_weights = np.zeros((1, self.n_inputs))
             delta_weights = -self.learning_rate * \
                 (self.weights @ data  - labels) @ (data.transpose())
-            self.weights += delta_weights
+            self.weights -= delta_weights
 
     def extend_data_with_bias(self, data):
         '''
@@ -76,11 +76,11 @@ def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-    meanA = [1, 3]
+    meanA = [3, 3]
     covA = np.array([[0.2, 0],
                      [0, 0.8]])
-    meanB = [-1, -2]
-    covB = np.array([[0.8, 0],
+    meanB = [-3, 3]
+    covB = np.array([[0.5, 0],
                      [0, 0.5]])
     classA = np.random.multivariate_normal(meanA, covA, N)
     classB = np.random.multivariate_normal(meanB, covB, N)
@@ -94,17 +94,39 @@ def generate_data(N, plot=False):
     if plot:
         plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
         plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
-        plt.legend()
+
         plt.plot()
 
     return data
+
+def plot_decision_boundary(data, weights):
+    """Take weights and plot corresponding decision boundary (2d).
+
+    Decision boundary is defined by the line wv = 0. In other words,
+    it is given by the line that is perpendicular to w.
+    """
+
+    classA = data[data[:, 2] == 1]
+    classB = data[data[:, 2] == -1]
+    plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
+    plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
+
+    print(weights)
+    w_slope = weights[0,1] / weights[0,0]
+    v_slope = 1/w_slope
+    v_x = np.linspace(-4, 4, 100)
+    v_y = v_slope * v_x
+    plt.plot(v_x, v_y, label='Decision boundary')
+    plt.legend()
+    plt.show()
+
 
 
 
 def test_delta_learning():
     # Test delta learning
-    n_data = 10
-    n_train_samples = 5
+    n_data = 50
+    n_train_samples = 25
     n_test_samples = n_data - n_train_samples
 
     data = generate_data(n_data)
@@ -114,7 +136,7 @@ def test_delta_learning():
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-    perceptron = Perceptron(learning_method="delta")
+    perceptron = Perceptron(learning_method="delta", learning_rate=0.5, n_epochs=20)
     perceptron.fit(patterns_train, targets_train)
 
     n_correct = 0
@@ -123,13 +145,15 @@ def test_delta_learning():
         pattern = np.reshape(test_sample[0], (-1, 1))
         target = test_sample[1]
         prediction = perceptron.predict(pattern)
-
-        print(target, prediction)
-
+        print(prediction, target)
         if prediction == target:
             n_correct += 1
         else:
             n_incorrect += 1
+
+    print(n_correct)
+    print(n_incorrect)
+    plot_decision_boundary(data, perceptron.weights)
 
 
 test_delta_learning()
