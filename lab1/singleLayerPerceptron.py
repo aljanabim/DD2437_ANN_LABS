@@ -63,7 +63,9 @@ class Perceptron():
     def delta_fit(self, data, labels, n_epochs=None):
         if not n_epochs:
             n_epochs = self.n_epochs
-        bias_ones = np.ones((self.n_inputs, 1))
+        bias_ones = np.ones((len(data), 1))
+        print(data.shape)
+        print(bias_ones.shape)
         data = np.column_stack([data, bias_ones])
         data = data.transpose()
 
@@ -73,13 +75,8 @@ class Perceptron():
         for _ in range(self.n_epochs):
             delta_weights = np.zeros((1, self.n_inputs))
             delta_weights = -self.learning_rate * \
-<<<<<<< HEAD
                 (self.weights @ data  - labels) @ (data.transpose())
             self.weights += delta_weights
-=======
-                (self.weights @ data - labels) @ (data.transpose())
-            self.weights -= delta_weights
->>>>>>> ff258802376dd378d331c6d53cc00dba5d6a59e7
 
     def extend_data_with_bias(self, data):
         '''
@@ -90,15 +87,16 @@ class Perceptron():
         return data
 
 
-# Test perceptron learning
-n_data = 10
-data = generate_data(n_data).T
-node = Perceptron()
+def test_perceptron_learning():
+    # Test perceptron learning
+    n_data = 10
+    data = generate_data(n_data).T
+    node = Perceptron()
 
-# hej
-node.fit(data, data[2])
+    # hej
+    node.fit(data, data[2])
 
-# %%
+    # %%
 
 
 def generate_data(N, plot=False):
@@ -142,13 +140,8 @@ def plot_decision_boundary(data, weights):
     plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
 
     print(weights)
-<<<<<<< HEAD
     w_slope = weights[0,1] / weights[0,0]
     v_slope = -1/w_slope
-=======
-    w_slope = weights[0, 1] / weights[0, 0]
-    v_slope = 1/w_slope
->>>>>>> ff258802376dd378d331c6d53cc00dba5d6a59e7
     v_x = np.linspace(-4, 4, 100)
     v_y = v_slope * v_x
     plt.plot(v_x, v_y, label='Decision boundary')
@@ -169,12 +162,7 @@ def test_delta_learning():
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-<<<<<<< HEAD
     perceptron = Perceptron(learning_method="delta", learning_rate=0.05, n_epochs=50)
-=======
-    perceptron = Perceptron(learning_method="delta",
-                            learning_rate=0.5, n_epochs=20)
->>>>>>> ff258802376dd378d331c6d53cc00dba5d6a59e7
     perceptron.fit(patterns_train, targets_train)
 
     n_correct = 0
