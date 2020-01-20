@@ -47,7 +47,7 @@ def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-    meanA = [1, 2]
+    meanA = [1, 3]
     covA = np.array([[1.2, 0],
                      [0, 0.8]])
     meanB = [-1, -2]
