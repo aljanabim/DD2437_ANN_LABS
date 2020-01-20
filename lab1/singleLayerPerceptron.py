@@ -19,7 +19,7 @@ class Perceptron():
 
     def predict(self, x):
         x = self.extend_data_with_bias(x)
-        if int(self.weights.dot(x)) > 0:
+        if float(self.weights.dot(x)) > 0:
             return 1
         else:
             return -1
@@ -50,6 +50,7 @@ class Perceptron():
         print("True", labels)
         print("Estim", output)
 
+
     def update_weights(self, data, check, labels):
         for i in range(len(labels)):
             if not check[0, i]:
@@ -60,23 +61,20 @@ class Perceptron():
                     self.weights = self.weights - \
                         self.learning_rate * data[:, i]
 
+
     def delta_fit(self, data, labels, n_epochs=None):
         if not n_epochs:
             n_epochs = self.n_epochs
         bias_ones = np.ones((len(data), 1))
-        print(data.shape)
-        print(bias_ones.shape)
         data = np.column_stack([data, bias_ones])
         data = data.transpose()
 
         self.weights = np.random.normal(0, 1, (1, 3))
-        print(self.weights @ data)
-        print(labels)
         for _ in range(self.n_epochs):
-            delta_weights = np.zeros((1, self.n_inputs))
             delta_weights = -self.learning_rate * \
                 (self.weights @ data  - labels) @ (data.transpose())
             self.weights += delta_weights
+
 
     def extend_data_with_bias(self, data):
         '''
@@ -139,8 +137,9 @@ def plot_decision_boundary(data, weights):
     plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
     plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
 
-    print(weights)
     w_slope = weights[0,1] / weights[0,0]
+    print(weights)
+    plt.plot(weights[0,0], weights[0,1], 'o', label='W vector')
     v_slope = -1/w_slope
     v_x = np.linspace(-4, 4, 100)
     v_y = v_slope * v_x
@@ -162,7 +161,7 @@ def test_delta_learning():
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-    perceptron = Perceptron(learning_method="delta", learning_rate=0.05, n_epochs=50)
+    perceptron = Perceptron(learning_method="delta", learning_rate=0.001, n_epochs=20)
     perceptron.fit(patterns_train, targets_train)
 
     n_correct = 0
@@ -171,7 +170,6 @@ def test_delta_learning():
         pattern = np.reshape(test_sample[0], (-1, 1))
         target = test_sample[1]
         prediction = perceptron.predict(pattern)
-        print(prediction, target)
         if prediction == target:
             n_correct += 1
         else:
