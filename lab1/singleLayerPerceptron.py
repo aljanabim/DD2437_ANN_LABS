@@ -5,6 +5,25 @@ from matplotlib import pyplot as plt
 np.random.seed(3)
 
 
+class Perceptron(learning_method=None):
+    def __init__():
+        self.W = None
+        self.learning_method = learning_method
+        pass
+
+    def predict(x):
+        if self.W.dot(x) >= 0:
+            return 1
+        else:
+            return -1
+
+    def fit(data, labels):
+        #TODO: Implement learning methods
+        pass
+
+
+
+
 def generateData(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
