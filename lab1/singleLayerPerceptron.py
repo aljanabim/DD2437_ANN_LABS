@@ -4,27 +4,46 @@ from matplotlib import pyplot as plt
 
 np.random.seed(3)
 
-
-class Perceptron(learning_method=None):
-    def __init__():
-        self.W = None
+class Perceptron():
+    def __init__(self, learning_method="perceptron", learning_rate=0.1):
+        # Learning parameters
         self.learning_method = learning_method
-        pass
+        self.learning_rate = learning_rate
+        # Model variables
+        self.W = None
+        self.n_inputs = None
+        self.n_outputs = None
+        
 
-    def predict(x):
+    def predict(self, x):
         if self.W.dot(x) >= 0:
             return 1
         else:
             return -1
 
-    def fit(data, labels):
-        #TODO: Implement learning methods
-        pass
+    def fit(self, data, labels):        
+        if self.learning_method == "perceptron":
+            self.perceptron_fit(data, labels)
+        elif self.learning_method == "delta":
+            self.delta_fit(data, labels)
+        
+
+    def perceptron_fit(self, data, labels):
+        #TODO: Implement
+        
+
+    def delta_fit(self, data, labels):
+        self.n_inputs = len(data)
+        self.W = np.random(-1, 1, (1, self.n_inputs))
+        delta_W = np.zeros((1, self.n_inputs))
+        delta_W = -self.learning_rate * data @ ( )
+        
+        
+
+        #TODO: Implement
 
 
-
-
-def generateData(N, plot=False):
+def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
@@ -36,15 +55,15 @@ def generateData(N, plot=False):
                      [0, -0.5]])
     classA = np.random.multivariate_normal(meanA, covA, N)
     classB = np.random.multivariate_normal(meanB, covB, N)
-    np.random.shuffle(classA)
-    np.random.shuffle(classB)
-
+    data = np.array([[classA, np.zeros(N)],
+                     [classB, np.ones(N)]])
     if plot:
         plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
         plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
         plt.legend()
         plt.plot()
+    
     return classA, classB
 
-
+hejhej
 classA, classB = generateData(100, plot=True)
