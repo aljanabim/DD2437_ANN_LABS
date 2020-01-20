@@ -39,24 +39,35 @@ class Perceptron():
         '''
         self.weights = np.random.normal(0, 0.5, self.n_inputs+1)
         data = self.extend_data_with_bias(data)
-        print(data)
         inputs = data[:, 0]
         outputs = data[:, 1]
+        for i in range(self.n_epochs):
+            pass
+        print(data)
 
-    # def delta_fit(self, data, labels, n_epochs=self.n_epoch):
-    #     data = self.extend_data_with_bias(data)
-    #     self.weights = np.random(-1, 1, (1, self.n_inputs+1))
-    #     for _ in range(self.n_epochs):
-    #         delta_weights = np.zeros((1, self.n_inputs+1))
-    #         delta_weights = -self.learning_rate * \
-    #             (self.weights.dot(data) - labels).dot(data.transpose())
-    #         self.weights += delta_weights
+    def delta_fit(self, data, labels, n_epochs=None):
+        print("Label shape" + str(labels.shape))
+        print("Data shape" + str(data.shape))
+
+        if not n_epochs:
+            n_epochs = self.n_epochs
+        data = self.extend_data_with_bias(data)
+        self.weights = np.random.normal(0, 0.5, (1, self.n_inputs+1))
+
+        for _ in range(self.n_epochs):
+            delta_weights = np.zeros((1, self.n_inputs+1))
+            print(self.weights.dot(data).shape)
+            print(self.weights.dot(data).dot(data.transpose()).shape)
+            delta_weights = -self.learning_rate * \
+                (self.weights.dot(data) - labels).dot(data.transpose())
+            self.weights += delta_weights
 
     def extend_data_with_bias(self, data):
         '''
         Extend data with a row of ones for the bias weight
         '''
-        data = np.row_stack([data, np.ones(data.shape[1])])
+        dim = data.shape[1] if len(data.shape) > 1 else 1
+        data = np.row_stack([data, np.ones(dim)])
         return data
 
 
@@ -68,7 +79,7 @@ def generate_data(N, plot=False):
     Generates data of two linearly seperable classes of N samples
     '''
     meanA = [1, 3]
-    covA = np.array([[1.2, 0],
+    covA = np.array([[0.2, 0],
                      [0, 0.8]])
     meanB = [-1, -2]
     covB = np.array([[0.8, 0],
@@ -88,11 +99,11 @@ def generate_data(N, plot=False):
         plt.legend()
         plt.plot()
 
-    return dataz
+    return data
 
 
-data = generate_data(100, plot=True)
-print(data)
+test_data = generate_data(100, plot=True)
+# print(data)
 
 
 # %%
@@ -109,14 +120,16 @@ patterns_test = data[-n_test_samples:, :2]
 targets_test = data[-n_test_samples:, 2]
 
 
-perceptron = Perceptron()
+perceptron = Perceptron(learning_method="delta")
 perceptron.fit(patterns_train, targets_train)
 
 n_correct = 0
 n_incorrect = 0
 for test_sample in zip(patterns_test, targets_test):
-    prediction = perceptron.predict(test_sample[0])
-    if prediction == test_sample[1]:
+    test_pattern = np.reshape(test_sample[0], (-1, 1))
+    test_target = test_sample[0]
+    prediction = perceptron.predict(test_pattern)
+    if prediction == test_target:
         n_correct += 1
     else:
         n_incorrect += 1
