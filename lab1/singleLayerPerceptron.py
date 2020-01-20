@@ -7,7 +7,7 @@ np.random.seed(3)
 
 
 class Perceptron():
-    def __init__(self, learning_method="perceptron", learning_rate=0.1, n_epochs=20):
+    def __init__(self, learning_method="perceptron", learning_rate=0.1, n_epochs=20, n_data=None):
         # Learning parameters
         self.learning_method = learning_method
         self.learning_rate = learning_rate
@@ -16,6 +16,7 @@ class Perceptron():
         self.weights = None
         self.n_inputs = None
         self.n_outputs = None
+        self.n_data = n_data
 
     def predict(self, x):
         x = self.extend_data_with_bias(x)
@@ -37,23 +38,26 @@ class Perceptron():
         '''
         Fit classifier using perceptron learning
         '''
-        self.weights = np.random.normal(
-            0, 0.5, (self.n_outputs, self.n_inputs+1))
+        self.weights = np.random.normal(0, 0.5, (self.n_inputs+1))
+        # Plot the DATA
+        plot_data(data.T[0:-1, :])
+
         data = self.extend_data_with_bias(data[0:2])
         labels = labels > 0
-
-        for i in range(1):  # self.n_epochs):
+        output = np.dot(self.weights, data) > 0
+        for i in range(self.n_epochs):
             output = np.dot(self.weights, data) > 0
-            check = np.logical_and(output, labels)
+            check = output == labels
             self.update_weights(data, check, labels)
 
-        print("True", labels)
-        print("Estim", output)
+        plot_decision_boundary(self.weights)
+        print("Correct out of", self.n_data*2,
+              "are", sum(labels == output))
 
     def update_weights(self, data, check, labels):
         for i in range(len(labels)):
-            if not check[0, i]:
-                if labels[i] < 0:  # -1 but shoud have been 1
+            if not check[i]:
+                if labels[i] > 0:  # -1 but should have been 1
                     self.weights = self.weights + \
                         self.learning_rate * data[:, i]
                 else:
@@ -75,7 +79,7 @@ class Perceptron():
         for _ in range(self.n_epochs):
             delta_weights = np.zeros((1, self.n_inputs))
             delta_weights = -self.learning_rate * \
-                (self.weights @ data  - labels) @ (data.transpose())
+                (self.weights @ data - labels) @ (data.transpose())
             self.weights += delta_weights
 
     def extend_data_with_bias(self, data):
@@ -87,23 +91,14 @@ class Perceptron():
         return data
 
 
-def test_perceptron_learning():
-    # Test perceptron learning
-    n_data = 10
-    data = generate_data(n_data).T
-    node = Perceptron()
-
-    # hej
-    node.fit(data, data[2])
-
-    # %%
+# %%
 
 
 def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-    meanA = [3, 3]
+    meanA = [-8, 3]
     covA = np.array([[0.2, 0],
                      [0, 0.8]])
     meanB = [-3, 3]
@@ -127,26 +122,41 @@ def generate_data(N, plot=False):
     return data
 
 
-def plot_decision_boundary(data, weights):
+def plot_data(data):
+    print(data)
+    classA = data[data[:, 2] == 1]
+    classB = data[data[:, 2] == -1]
+    plt.scatter(classA[:, 0], classA[:, 1], label="Class A", c="#00c7ff")
+    plt.scatter(classB[:, 0], classB[:, 1], label="Class B", c="#ff3064")
+
+
+def plot_decision_boundary(weights):
     """Take weights and plot corresponding decision boundary (2d).
 
     Decision boundary is defined by the line wv = 0. In other words,
-    it is given by the line that is perpendicular to w.
+    it is given by the line that is perpendicular to w. This is given by
+    wv = w_0*x_0 + w_1*x_1 + w_2 = 0 => x_2 = -(w_0/w_1)*x_0 - (w_2/w_1)
+    which is the equation for a straight line.
     """
-
-    classA = data[data[:, 2] == 1]
-    classB = data[data[:, 2] == -1]
-    plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
-    plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
-
-    print(weights)
-    w_slope = weights[0,1] / weights[0,0]
-    v_slope = -1/w_slope
-    v_x = np.linspace(-4, 4, 100)
-    v_y = v_slope * v_x
+    # plt.legend()
+    # plt.plot(weights[0,0], weights[0,1], 'o', label='W vector')
+    v_x = np.linspace(-10, 10, 100)
+    v_y = -(weights[0]/weights[1])*v_x - weights[2]/weights[1]
     plt.plot(v_x, v_y, label='Decision boundary')
     plt.legend()
     plt.show()
+
+
+def test_perceptron_learning():
+    # Test perceptron learning
+    print("DOING PERCEPTRON LEARNING")
+    n_data = 50
+    data = generate_data(n_data).T
+    node = Perceptron(learning_method='perceptron',
+                      learning_rate=0.1, n_epochs=600, n_data=n_data)
+
+    node.fit(data, data[2])
+    print("FINISHED PERCEPTRON LEARNING")
 
 
 def test_delta_learning():
@@ -162,7 +172,8 @@ def test_delta_learning():
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-    perceptron = Perceptron(learning_method="delta", learning_rate=0.05, n_epochs=50)
+    perceptron = Perceptron(learning_method="delta",
+                            learning_rate=0.05, n_epochs=50)
     perceptron.fit(patterns_train, targets_train)
 
     n_correct = 0
@@ -182,4 +193,5 @@ def test_delta_learning():
     plot_decision_boundary(data, perceptron.weights)
 
 
-test_delta_learning()
+# test_delta_learning()
+test_perceptron_learning()
