@@ -70,13 +70,18 @@ class Perceptron():
         if not n_epochs:
             n_epochs = self.n_epochs
         bias_ones = np.ones((len(data), 1))
+        # Add column of ones, representing bias
         data = np.column_stack([data, bias_ones])
+        # Tranpose so as to match assignment instruction dimensions
         data = data.transpose()
 
+        # Randomizes initial weights
         self.weights = np.random.normal(0, 0.5, (1, 3))
         for _ in range(self.n_epochs):
+            # Delta learning rule taken from assignment instructions
             delta_weights = -(self.learning_rate *
                 (self.weights @ data  - labels) @ (data.transpose()))
+            # Update weights
             self.weights += delta_weights
 
 
