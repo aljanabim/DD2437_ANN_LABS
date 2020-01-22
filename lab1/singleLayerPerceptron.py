@@ -9,7 +9,7 @@ plt.style.use('ggplot')
 
 
 class Perceptron():
-    def __init__(self, learning_method="perceptron", learning_rate=0.1, n_epochs=20, n_data=None):
+    def __init__(self, learning_method="perceptron", learning_rate=0.001, n_epochs=20, n_data=None):
         # Learning parameters
         self.learning_method = learning_method
         self.learning_rate = learning_rate
@@ -174,7 +174,7 @@ def test_accuracy(model, patterns_test, targets_test):
         return n_correct/(n_correct + n_incorrect)
 
 
-def plot_decision_boundary(data, *weights, title=None):
+def plot_decision_boundary(data, *weights, title=None, labels=None):
     """Take weights and plot corresponding decision boundary (2d).
 
     Weights should be an (1,N) shape 2-d array, and not a (N,) 1-d array.
@@ -194,6 +194,9 @@ def plot_decision_boundary(data, *weights, title=None):
     plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
     plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
 
+    if not labels:
+        labels = ['Decision boundary {}'.format(i) for i in range(len(weights))]
+
     # Plot decision boundaries
     for i, weight_set in enumerate(weights):
         v_x = np.linspace(-5, 5, 100)
@@ -203,7 +206,7 @@ def plot_decision_boundary(data, *weights, title=None):
         else:
             # without bias
             v_y = -(weight_set[0,0]/weight_set[0,1])*v_x
-        plt.plot(v_x, v_y, label='Decision boundary {}'.format(i))
+        plt.plot(v_x, v_y, label=labels[i])
 
     # Show plot
     x_max = np.max(data[:, 0])
@@ -304,16 +307,30 @@ def no_bias_comparison():
     # Split data
     patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
 
-    delta_perceptron = Perceptron(learning_method="delta")
-    delta_no_bias_perceptron = Perceptron(learning_method="delta_no_bias")
+    delta_perceptron = Perceptron(learning_method="delta",
+                                  learning_rate=learning_rate,
+                                  n_epochs=n_epochs)
+    delta_no_bias_perceptron = Perceptron(learning_method="delta_no_bias",
+                                          learning_rate=learning_rate,
+                                          n_epochs=n_epochs)
 
     delta_perceptron.fit(patterns_train, targets_train)
     delta_no_bias_perceptron.fit(patterns_train, targets_train)
 
+    plot_decision_boundary
 
+    plot_squared_errors([delta_perceptron.squared_errors, delta_no_bias_perceptron.squared_errors],
+                        ["Delta learning", "Delta learning without bias"])
+
+    plot_decision_boundary(data[:n_train_samples],
+                           delta_perceptron.weights,
+                           delta_no_bias_perceptron.weights,
+                           title="Effect of bias on delta learning",
+                           labels=["Delta learning", "Delta learning without bias"])
 
 
 
 if __name__ == "__main__":
     # test_perceptron_learning()
-    test_delta_learning()
+    # test_delta_learning()
+    no_bias_comparison()
