@@ -151,6 +151,28 @@ def generate_data(N, plot=False):
 
     return data
 
+def split_data(data, n_train_samples):
+    n_test_samples = len(data) - n_train_samples
+    patterns_train = data[:n_train_samples, :2]
+    targets_train = data[:n_train_samples, 2]
+    patterns_test = data[-n_test_samples:, :2]
+    targets_test = data[-n_test_samples:, 2]
+    return patterns_train, targets_train, patterns_test, targets_test
+
+def test_accuracy(model, patterns_test, targets_test):
+    n_correct = 0
+    n_incorrect = 0
+    for test_sample in zip(patterns_test, targets_test):
+        # Reshape pattern array into 2-d array
+        pattern = np.reshape(test_sample[0], (-1, 1))
+        target = test_sample[1]
+        prediction = model.predict(pattern)
+        if prediction == target:
+            n_correct += 1
+        else:
+            n_incorrect += 1
+        return n_correct/(n_correct + n_incorrect)
+
 
 def plot_decision_boundary(data, *weights, title=None):
     """Take weights and plot corresponding decision boundary (2d).
@@ -195,13 +217,13 @@ def plot_decision_boundary(data, *weights, title=None):
         plt.title(title)
     plt.show()
 
-def plot_squared_errors(squared_errors_list, plot_labels_list=None):
+def plot_squared_errors(squared_errors_list, plot_label_list=None):
     """Take list of lists squared errors and plot it."
     Keyword arg plot_labels_list allows custom labels to be set.
     """
-    if not plot_labels_list:
-        plot_labels_list = ["Squared errors {}".format(i) for i in range(len(squared_errors_list))]
-    for squared_errors, plot_label in zip(squared_errors_list, plot_labels_list):
+    if not plot_label_list:
+        plot_label_list = ["Squared errors {}".format(i) for i in range(len(squared_errors_list))]
+    for squared_errors, plot_label in zip(squared_errors_list, plot_label_list):
         plt.plot(range(len(squared_errors)), squared_errors, label=plot_label)
     plt.title('Squared errors vs. epochs')
     plt.xlabel("Epoch")
@@ -235,37 +257,27 @@ def test_delta_learning():
     # learning_rule = "delta"
     learning_rule = "delta_no_bias"
 
-    # Split data
+    # Generate data
     data = generate_data(n_data)
-    patterns_train = data[:n_train_samples, :2]
-    targets_train = data[:n_train_samples, 2]
-    patterns_test = data[-n_test_samples:, :2]
-    targets_test = data[-n_test_samples:, 2]
+    # Split data
+    patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
+
 
     # Initialize percepptron
     perceptron = Perceptron(learning_method=learning_rule, learning_rate=learning_rate, n_epochs=n_epochs)
 
     # Run training and testing n_trials times, save weights in list.
     weights_list = []
-    n_correct = 0
-    n_incorrect = 0
+    accuracy = 0
     for trial in range(n_trials):
         perceptron.fit(patterns_train, targets_train)
-        for test_sample in zip(patterns_test, targets_test):
-            # Reshape pattern array into 2-d array
-            pattern = np.reshape(test_sample[0], (-1, 1))
-            target = test_sample[1]
-            prediction = perceptron.predict(pattern)
-            if prediction == target:
-                n_correct += 1
-            else:
-                n_incorrect += 1
-
+        # Test accuracy
+        accuracy += test_accuracy(perceptron, patterns_test, targets_test) / n_trials
         # Save final weights for plotting of decision boundaries
         weights_list.append(perceptron.weights)
 
-    print("Sample weights: {}".format(weights_list))
-    print("Total testing accuracy: {}".format(n_correct/(n_correct+n_incorrect)))
+    print("Example weights: {}".format(weights_list))
+    print("Total testing accuracy: {}".format(accuracy))
 
     # Plot decision boundaries together with training data
     plot_decision_boundary(data[:n_train_samples], *weights_list,
@@ -276,6 +288,30 @@ def test_delta_learning():
 
     # Plot squared errors
     plot_squared_errors([perceptron.squared_errors], ["Delta rule learning"])
+
+
+def no_bias_comparison():
+    # Set training and testing parameters
+    n_epochs = 20
+    learning_rate = 0.001
+    n_data = 50
+    n_train_samples = 25
+    n_test_samples = n_data - n_train_samples
+    n_trials = 5
+
+    # Generate data
+    data = generate_data(n_data)
+    # Split data
+    patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
+
+    delta_perceptron = Perceptron(learning_method="delta")
+    delta_no_bias_perceptron = Perceptron(learning_method="delta_no_bias")
+
+    delta_perceptron.fit(patterns_train, targets_train)
+    delta_no_bias_perceptron.fit(patterns_train, targets_train)
+
+
+
 
 
 if __name__ == "__main__":
