@@ -195,8 +195,14 @@ def plot_decision_boundary(data, *weights, title=None):
         plt.title(title)
     plt.show()
 
-def plot_squared_errors(squared_errors):
-    plt.plot(range(len(squared_errors)), squared_errors, label="Squared error")
+def plot_squared_errors(squared_errors_list, plot_labels_list=None):
+    """Take list of lists squared errors and plot it."
+    Keyword arg plot_labels_list allows custom labels to be set.
+    """
+    if not plot_labels_list:
+        plot_labels_list = ["Squared errors {}".format(i) for i in range(len(squared_errors_list))]
+    for squared_errors, plot_label in zip(squared_errors_list, plot_labels_list):
+        plt.plot(range(len(squared_errors)), squared_errors, label=plot_label)
     plt.title('Squared errors vs. epochs')
     plt.xlabel("Epoch")
     plt.ylabel("Squared error")
@@ -269,7 +275,7 @@ def test_delta_learning():
                            title="Decision boundaries and testing data")
 
     # Plot squared errors
-    plot_squared_errors(perceptron.squared_errors)
+    plot_squared_errors([perceptron.squared_errors], ["Delta rule learning"])
 
 
 if __name__ == "__main__":
