@@ -19,6 +19,8 @@ class Perceptron():
         self.n_inputs = None
         self.n_outputs = None
         self.n_data = n_data
+        # Bookkeeping
+        self.squared_errors = None
 
     def predict(self, x):
         if not self.learning_method == "delta_no_bias":
@@ -29,6 +31,7 @@ class Perceptron():
             return -1
 
     def fit(self, data, labels):
+        self.squared_errors = [] # Clear error bookkeeping
         self.n_inputs = len(data[0:2])
         self.n_outputs = 1
 
@@ -101,9 +104,14 @@ class Perceptron():
 
     def _delta_iterate(self, data, labels, n_epochs):
         for _ in range(self.n_epochs):
+            # Calculate error vector
+            error = self.weights @ data - labels
+            # Save squared errors
+            error_square_sum = float(error @ error.T)
+            self.squared_errors.append(error_square_sum)
             # Delta learning rule taken from assignment instructions
             delta_weights = -(self.learning_rate *
-                (self.weights @ data - labels) @ (data.transpose()))
+                error @ (data.transpose()))
             # Update weights
             self.weights += delta_weights
 
@@ -204,14 +212,14 @@ def test_delta_learning():
     """Script for testing delta learning implementation and plotting decision boundaries."""
 
     # Set training and testing parameters
-    n_epochs = 2000
+    n_epochs = 20
     learning_rate = 0.001
     n_data = 50
     n_train_samples = 25
     n_test_samples = n_data - n_train_samples
     n_trials = 5
-    learning_rule = "delta"
-    # learning_rule = "delta_no_bias"
+    # learning_rule = "delta"
+    learning_rule = "delta_no_bias"
 
     # Split data
     data = generate_data(n_data)
@@ -251,6 +259,10 @@ def test_delta_learning():
     # Plot decision boundaries together with testing data
     plot_decision_boundary(data[-n_test_samples:], *weights_list,
                            title="Decision boundaries and testing data")
+
+
+    plt.plot(range(len(perceptron.squared_errors)), perceptron.squared_errors)
+    plt.show()
 
 
 if __name__ == "__main__":
