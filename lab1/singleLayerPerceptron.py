@@ -40,16 +40,10 @@ class Perceptron():
         '''
         Fit classifier using perceptron learning
         '''
-<<<<<<< HEAD
         self.weights = np.random.normal(0, 0.5, (self.n_inputs+1))
         # Plot the DATA
         plot_data(data.T[0:-1, :])
 
-=======
-        data = data.T
-        self.weights = np.random.normal(
-            0, 0.5, (self.n_outputs, self.n_inputs+1))
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
         data = self.extend_data_with_bias(data[0:2])
         labels = labels > 0
         output = np.dot(self.weights, data) > 0
@@ -88,16 +82,10 @@ class Perceptron():
         # Randomizes initial weights
         self.weights = np.random.normal(0, 0.5, (1, 3))
         for _ in range(self.n_epochs):
-<<<<<<< HEAD
-            delta_weights = np.zeros((1, self.n_inputs))
-            delta_weights = -self.learning_rate * \
-                (self.weights @ data - labels) @ (data.transpose())
-=======
             # Delta learning rule taken from assignment instructions
             delta_weights = -(self.learning_rate *
                 (self.weights @ data  - labels) @ (data.transpose()))
             # Update weights
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
             self.weights += delta_weights
 
 
@@ -110,21 +98,11 @@ class Perceptron():
         return data
 
 
-<<<<<<< HEAD
-# %%
-
-
-=======
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
 def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-<<<<<<< HEAD
-    meanA = [-8, 3]
-=======
     meanA = [2, 2]
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
     covA = np.array([[0.2, 0],
                      [0, 0.8]])
     meanB = [-2, 2]
@@ -148,19 +126,7 @@ def generate_data(N, plot=False):
     return data
 
 
-<<<<<<< HEAD
-def plot_data(data):
-    print(data)
-    classA = data[data[:, 2] == 1]
-    classB = data[data[:, 2] == -1]
-    plt.scatter(classA[:, 0], classA[:, 1], label="Class A", c="#00c7ff")
-    plt.scatter(classB[:, 0], classB[:, 1], label="Class B", c="#ff3064")
-
-
-def plot_decision_boundary(weights):
-=======
 def plot_decision_boundary(data, *weights, title=None):
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
     """Take weights and plot corresponding decision boundary (2d).
 
     Weights should be an (1,N) shape 2-d array, and not a (N,) 1-d array.
@@ -173,13 +139,6 @@ def plot_decision_boundary(data, *weights, title=None):
     wv = w_0*x_0 + w_1*x_1 + w_2 = 0 => x_2 = -(w_0/w_1)*x_0 - (w_2/w_1)
     which is the equation for a straight line.
     """
-<<<<<<< HEAD
-    # plt.legend()
-    # plt.plot(weights[0,0], weights[0,1], 'o', label='W vector')
-    v_x = np.linspace(-10, 10, 100)
-    v_y = -(weights[0]/weights[1])*v_x - weights[2]/weights[1]
-    plt.plot(v_x, v_y, label='Decision boundary')
-=======
 
     # Scatterplot data points
     classA = data[data[:, 2] == 1]
@@ -200,7 +159,6 @@ def plot_decision_boundary(data, *weights, title=None):
     y_min = np.min(data[:, 1])
     plt.xlim(x_min-2, x_max+2)
     plt.ylim(y_min-2, y_max+2)
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
     plt.legend()
     if title:
         plt.title(title)
@@ -209,7 +167,6 @@ def plot_decision_boundary(data, *weights, title=None):
 
 def test_perceptron_learning():
     # Test perceptron learning
-<<<<<<< HEAD
     print("DOING PERCEPTRON LEARNING")
     n_data = 50
     data = generate_data(n_data).T
@@ -219,17 +176,6 @@ def test_perceptron_learning():
     node.fit(data, data[2])
     print("FINISHED PERCEPTRON LEARNING")
 
-=======
-    n_data = 100
-    data = generate_data(n_data)
-    node = Perceptron()
-
-    # hej
-    node.fit(data[:, :2], data[:, 2])
-    plot_decision_boundary(data, node.weights)
-
-    # %%
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
 
 def test_delta_learning():
     """Script for testing delta learning implementation and plotting decision boundaries."""
@@ -249,38 +195,13 @@ def test_delta_learning():
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
 
-<<<<<<< HEAD
-    perceptron = Perceptron(learning_method="delta",
-                            learning_rate=0.05, n_epochs=50)
-    perceptron.fit(patterns_train, targets_train)
-=======
     # Initialize percepptron
     perceptron = Perceptron(learning_method="delta", learning_rate=learning_rate, n_epochs=n_epochs)
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
 
     # Run training and testing n_trials times, save weights in list.
     weights_list = []
     n_correct = 0
     n_incorrect = 0
-<<<<<<< HEAD
-    for test_sample in zip(patterns_test, targets_test):
-        pattern = np.reshape(test_sample[0], (-1, 1))
-        target = test_sample[1]
-        prediction = perceptron.predict(pattern)
-        print(prediction, target)
-        if prediction == target:
-            n_correct += 1
-        else:
-            n_incorrect += 1
-
-    print(n_correct)
-    print(n_incorrect)
-    plot_decision_boundary(data, perceptron.weights)
-
-
-# test_delta_learning()
-test_perceptron_learning()
-=======
     for trial in range(n_trials):
         perceptron.fit(patterns_train, targets_train)
         for test_sample in zip(patterns_test, targets_test):
@@ -310,4 +231,3 @@ test_perceptron_learning()
 if __name__ == "__main__":
     # test_perceptron_learning()
     test_delta_learning()
->>>>>>> 1821cda999074dbd72b838b769dc04ef75a41973
