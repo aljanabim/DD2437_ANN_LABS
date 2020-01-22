@@ -20,7 +20,8 @@ class Perceptron():
         self.n_outputs = None
 
     def predict(self, x):
-        x = self.extend_data_with_bias(x)
+        if not self.learning_method == "delta_no_bias":
+            x = self.extend_data_with_bias(x)
         if float(self.weights.dot(x)) > 0:
             return 1
         else:
@@ -34,6 +35,8 @@ class Perceptron():
             self.perceptron_fit(data, labels)
         elif self.learning_method == "delta":
             self._delta_fit(data, labels)
+        elif self.learning_method == "delta_no_bias":
+            self._delta_fit_no_bias(data, labels)
 
     def perceptron_fit(self, data, labels):
         '''
@@ -75,16 +78,31 @@ class Perceptron():
         data = np.column_stack([data, bias_ones])
         # Tranpose so as to match assignment instruction dimensions
         data = data.transpose()
-
         # Randomizes initial weights
-        self.weights = np.random.normal(0, 0.5, (1, 3))
+        self.weights = np.random.normal(0, 0.5, (1, data.shape[0]))
+        # Run delta rule iterations
+        self._delta_iterate(data, labels, n_epochs)
+
+
+    def _delta_fit_no_bias(self, data, labels, n_epochs=None):
+        """Fit classifier using delta rule learning, without using any bias."""
+        if not n_epochs:
+            n_epochs = self.n_epochs
+        # Tranpose so as to match assignment instruction dimensions
+        data = data.transpose()
+        # Randomizes initial weights
+        self.weights = np.random.normal(0, 0.5, (1, data.shape[0]))
+        # Run delta rule iterations
+        self._delta_iterate(data, labels, n_epochs)
+
+
+    def _delta_iterate(self, data, labels, n_epochs):
         for _ in range(self.n_epochs):
             # Delta learning rule taken from assignment instructions
             delta_weights = -(self.learning_rate *
-                (self.weights @ data  - labels) @ (data.transpose()))
+                (self.weights @ data - labels) @ (data.transpose()))
             # Update weights
             self.weights += delta_weights
-
 
     def extend_data_with_bias(self, data):
         '''
@@ -99,7 +117,7 @@ def generate_data(N, plot=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-    meanA = [2, 2]
+    meanA = [4, 2]
     covA = np.array([[0.2, 0],
                      [0, 0.8]])
     meanB = [-2, 2]
@@ -146,7 +164,12 @@ def plot_decision_boundary(data, *weights, title=None):
     # Plot decision boundaries
     for i, weight_set in enumerate(weights):
         v_x = np.linspace(-5, 5, 100)
-        v_y = -(weight_set[0,0]/weight_set[0,1])*v_x - weight_set[0,2]/weight_set[0,1]
+        if len(weight_set[0]) == 3:
+            # with bias
+            v_y = -(weight_set[0,0]/weight_set[0,1])*v_x - weight_set[0,2]/weight_set[0,1]
+        else:
+            # without bias
+            v_y = -(weight_set[0,0]/weight_set[0,1])*v_x
         plt.plot(v_x, v_y, label='Decision boundary {}'.format(i))
 
     # Show plot
@@ -178,12 +201,14 @@ def test_delta_learning():
     """Script for testing delta learning implementation and plotting decision boundaries."""
 
     # Set training and testing parameters
-    n_epochs = 20
+    n_epochs = 2000
     learning_rate = 0.001
     n_data = 50
     n_train_samples = 25
     n_test_samples = n_data - n_train_samples
     n_trials = 5
+    learning_rule = "delta"
+    # learning_rule = "delta_no_bias"
 
     # Split data
     data = generate_data(n_data)
@@ -193,7 +218,7 @@ def test_delta_learning():
     targets_test = data[-n_test_samples:, 2]
 
     # Initialize percepptron
-    perceptron = Perceptron(learning_method="delta", learning_rate=learning_rate, n_epochs=n_epochs)
+    perceptron = Perceptron(learning_method=learning_rule, learning_rate=learning_rate, n_epochs=n_epochs)
 
     # Run training and testing n_trials times, save weights in list.
     weights_list = []
@@ -215,7 +240,7 @@ def test_delta_learning():
         weights_list.append(perceptron.weights)
 
     print("Sample weights: {}".format(weights_list))
-    print("Total testing accuract: {}".format(n_correct/(n_correct+n_incorrect)))
+    print("Total testing accuracy: {}".format(n_correct/(n_correct+n_incorrect)))
 
     # Plot decision boundaries together with training data
     plot_decision_boundary(data[:n_train_samples], *weights_list,
