@@ -9,7 +9,7 @@ plt.style.use('ggplot')
 
 
 class Perceptron():
-    def __init__(self, learning_method="perceptron", learning_rate=0.1, n_epochs=20):
+    def __init__(self, learning_method="perceptron", learning_rate=0.1, n_epochs=20, n_data=None):
         # Learning parameters
         self.learning_method = learning_method
         self.learning_rate = learning_rate
@@ -18,6 +18,7 @@ class Perceptron():
         self.weights = None
         self.n_inputs = None
         self.n_outputs = None
+        self.n_data = n_data
 
     def predict(self, x):
         if not self.learning_method == "delta_no_bias":
@@ -42,26 +43,28 @@ class Perceptron():
         '''
         Fit classifier using perceptron learning
         '''
-        data = data.T
-        self.weights = np.random.normal(
-            0, 0.5, (self.n_outputs, self.n_inputs+1))
+        self.weights = np.random.normal(0, 0.5, (self.n_inputs+1))
+        # Plot the DATA
+        plot_data(data.T[0:-1, :])
+
         data = self.extend_data_with_bias(data[0:2])
         labels = labels > 0
-
-        for i in range(1):  # self.n_epochs):
+        output = np.dot(self.weights, data) > 0
+        for i in range(self.n_epochs):
             output = np.dot(self.weights, data) > 0
-            check = np.logical_and(output, labels)
+            check = output == labels
             self.update_weights(data, check, labels)
 
-        print("True", labels)
-        print("Estim", output)
+        plot_decision_boundary(self.weights)
+        print("Correct out of", self.n_data*2,
+              "are", sum(labels == output))
 
 
     def update_weights(self, data, check, labels):
         """Helper function to perceptron learning."""
         for i in range(len(labels)):
-            if not check[0, i]:
-                if labels[i] < 0:  # -1 but shoud have been 1
+            if not check[i]:
+                if labels[i] > 0:  # -1 but should have been 1
                     self.weights = self.weights + \
                         self.learning_rate * data[:, i]
                 else:
@@ -187,15 +190,15 @@ def plot_decision_boundary(data, *weights, title=None):
 
 def test_perceptron_learning():
     # Test perceptron learning
-    n_data = 100
-    data = generate_data(n_data)
-    node = Perceptron()
+    print("DOING PERCEPTRON LEARNING")
+    n_data = 50
+    data = generate_data(n_data).T
+    node = Perceptron(learning_method='perceptron',
+                      learning_rate=0.1, n_epochs=600, n_data=n_data)
 
-    # hej
-    node.fit(data[:, :2], data[:, 2])
-    plot_decision_boundary(data, node.weights)
+    node.fit(data, data[2])
+    print("FINISHED PERCEPTRON LEARNING")
 
-    # %%
 
 def test_delta_learning():
     """Script for testing delta learning implementation and plotting decision boundaries."""
