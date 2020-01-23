@@ -21,17 +21,27 @@ class Perceptron():
         self.n_data = n_data
         # Bookkeeping
         self.squared_errors = None
+        self.n_errors = None
 
     def predict(self, x):
         if not self.learning_method == "delta_no_bias":
             x = self.extend_data_with_bias(x)
+
         if float(self.weights.dot(x)) > 0:
             return 1
         else:
             return -1
 
+    def predict_array(self, X):
+        pred = self.weights @ X
+        pred[pred > 0] = 1
+        pred[pred < 0] = -1
+        return pred
+
+
     def fit(self, data, labels):
         self.squared_errors = [] # Clear error bookkeeping
+        self.n_errors = []
         self.n_inputs = len(data[0:2])
         self.n_outputs = 1
 
@@ -48,19 +58,20 @@ class Perceptron():
         '''
         self.weights = np.random.normal(0, 0.5, (self.n_inputs+1))
         # Plot the DATA
-        plot_data(data.T[0:-1, :])
-
-        data = self.extend_data_with_bias(data[0:2])
+        # plot_data(data.T[0:-1, :])
+        data = data.T
+        data = self.extend_data_with_bias(data)
+        symmetric_labels = labels.copy()
         labels = labels > 0
         output = np.dot(self.weights, data) > 0
         for i in range(self.n_epochs):
+            preds = self.predict_array(data)
+            n_errors = np.sum(preds != symmetric_labels)
+            self.n_errors.append(n_errors)
+
             output = np.dot(self.weights, data) > 0
             check = output == labels
             self.update_weights(data, check, labels)
-
-        plot_decision_boundary(self.weights)
-        print("Correct out of", self.n_data*2,
-              "are", sum(labels == output))
 
 
     def update_weights(self, data, check, labels):
@@ -104,16 +115,21 @@ class Perceptron():
 
     def _delta_iterate(self, data, labels, n_epochs):
         for _ in range(self.n_epochs):
-            # Calculate error vector
+            # Calculate squared errors
             error = self.weights @ data - labels
-            # Save squared errors
             error_square_sum = float(error @ error.T)
             self.squared_errors.append(error_square_sum)
+            # Calculate number of errors
+            preds = self.predict_array(data)
+            n_errors = np.sum(preds != labels)
+            self.n_errors.append(n_errors)
+
             # Delta learning rule taken from assignment instructions
             delta_weights = -(self.learning_rate *
                 error @ (data.transpose()))
             # Update weights
             self.weights += delta_weights
+
 
     def extend_data_with_bias(self, data):
         '''
@@ -124,20 +140,31 @@ class Perceptron():
         return data
 
 
-def generate_data(N, plot=False, meanA = None, meanB = None):
+def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=None):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
+    # Set up gaussian distribution parameters
     if not meanA:
         meanA = [4, 2]
-    covA = np.array([[0.2, 0],
-                     [0, 0.8]])
+    if not sigmaA:
+        covA = np.array([[0.5, 0],
+                         [0, 0.5]])
+    else:
+        covA = np.array([[sigmaA, 0],
+                         [0, sigmaA]])
     if not meanB:
         meanB = [-2, 2]
-    covB = np.array([[0.5, 0],
-                     [0, 0.5]])
+    if not sigmaB:
+        covB = np.array([[0.5, 0],
+                         [0, 0.5]])
+    else:
+        covB = np.array([[sigmaB, 0],
+                         [0, sigmaB]])
+
     classA = np.random.multivariate_normal(meanA, covA, N)
     classB = np.random.multivariate_normal(meanB, covB, N)
+
     classA_extended = np.column_stack([classA, np.ones(N)])
     classB_extended = np.column_stack([classB, -np.ones(N)])
     data = np.row_stack([classA_extended, classB_extended])
@@ -201,13 +228,14 @@ def plot_decision_boundary(data, *weights, title=None, labels=None):
 
     # Plot decision boundaries
     for i, weight_set in enumerate(weights):
+        weight_set = weight_set.flatten()
         v_x = np.linspace(-5, 5, 100)
-        if len(weight_set[0]) == 3:
+        if len(weight_set) == 3:
             # with bias
-            v_y = -(weight_set[0,0]/weight_set[0,1])*v_x - weight_set[0,2]/weight_set[0,1]
+            v_y = -(weight_set[0]/weight_set[1])*v_x - weight_set[2]/weight_set[1]
         else:
             # without bias
-            v_y = -(weight_set[0,0]/weight_set[0,1])*v_x
+            v_y = -(weight_set[0]/weight_set[1])*v_x
         plt.plot(v_x, v_y, label=labels[i])
 
     # Show plot
@@ -222,17 +250,31 @@ def plot_decision_boundary(data, *weights, title=None, labels=None):
         plt.title(title)
     plt.show()
 
-def plot_squared_errors(squared_errors_list, plot_label_list=None):
+def plot_squared_errors(*squared_errors_list, labels=None):
     """Take list of lists squared errors and plot it."
     Keyword arg plot_labels_list allows custom labels to be set.
     """
-    if not plot_label_list:
-        plot_label_list = ["Squared errors {}".format(i) for i in range(len(squared_errors_list))]
-    for squared_errors, plot_label in zip(squared_errors_list, plot_label_list):
+    if not labels:
+        labels = ["Preceptron {}".format(i) for i in range(len(squared_errors_list))]
+    for squared_errors, plot_label in zip(squared_errors_list, labels):
         plt.plot(range(len(squared_errors)), squared_errors, label=plot_label)
-    plt.title('Squared errors vs. epochs')
+    plt.title('Squared errors vs. training epochs')
     plt.xlabel("Epoch")
     plt.ylabel("Squared error")
+    plt.legend()
+    plt.show()
+
+def plot_n_errors(*n_errors_list, labels=None):
+    """Take list of lists of number of errors and plot it."
+    Keyword arg plot_labels_list allows custom labels to be set.
+    """
+    if not labels:
+        labels = ["Preceptron {}".format(i) for i in range(len(n_errors_list))]
+    for n_errors, plot_label in zip(n_errors_list, labels):
+        plt.plot(range(len(n_errors)), n_errors, label=plot_label)
+    plt.title('Number of errors vs. training epochs')
+    plt.xlabel("Epoch")
+    plt.ylabel("Number of errors")
     plt.legend()
     plt.show()
 
@@ -296,16 +338,17 @@ def test_delta_learning():
 
 
 def no_bias_comparison():
+    """Generates plots needed for 3.1.2.3."""
     # Set training and testing parameters
     n_epochs = 2000
     learning_rate = 0.001
-    n_data = 50
-    n_train_samples = 25
+    n_data = 10
+    n_train_samples = 5
     n_test_samples = n_data - n_train_samples
-    n_trials = 5
 
     # Generate data
-    data = generate_data(n_data, meanA = [-1.5, 2], meanB = [1.5, 2])
+    data = generate_data(n_data, meanA = [1.5, 2], meanB = [4.5, 2])
+    # data = generate_data(n_data, meanA = [-1.5, 2], meanB = [1.5, 2])
     # Split data
     patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
 
@@ -319,8 +362,9 @@ def no_bias_comparison():
     delta_perceptron.fit(patterns_train, targets_train)
     delta_no_bias_perceptron.fit(patterns_train, targets_train)
 
-    plot_squared_errors([delta_perceptron.squared_errors, delta_no_bias_perceptron.squared_errors],
-                        ["Delta learning with bias", "Delta learning without bias"])
+    plot_squared_errors(delta_perceptron.squared_errors,
+                        delta_no_bias_perceptron.squared_errors,
+                        labels=["Delta learning with bias", "Delta learning without bias"])
 
     plot_decision_boundary(data[:n_train_samples],
                            delta_perceptron.weights,
@@ -328,9 +372,42 @@ def no_bias_comparison():
                            title="Effect of bias on delta learning",
                            labels=["Delta learning with bias", "Delta learning without bias"])
 
+def non_linearly_separable():
+    """Script that generates plots needed for 3.1.3."""
+    n_epochs = 100
+    learning_rate = 0.001
+    n_data = 100
+    n_train_samples = 100
+    n_test_samples = n_data - n_train_samples
 
+    data = generate_data(n_data, meanA = [-1, 2], meanB = [1, 2])
+    patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
+
+    delta_perceptron = Perceptron(learning_method="delta",
+                                  learning_rate=learning_rate,
+                                  n_epochs=n_epochs)
+
+    perceptron_perceptron = Perceptron(learning_method="perceptron",
+                                       learning_rate=learning_rate,
+                                       n_epochs=n_epochs)
+
+    delta_perceptron.fit(patterns_train, targets_train)
+    perceptron_perceptron.fit(patterns_train, targets_train)
+
+    plot_decision_boundary(data[:n_train_samples],
+                           delta_perceptron.weights,
+                           perceptron_perceptron.weights,
+                           title="Effect of bias on delta learning",
+                           labels=["Delta learning", "Perceptron learning"])
+
+    plot_n_errors(delta_perceptron.n_errors,
+                  perceptron_perceptron.n_errors,
+                  labels=["Delta learning", "Perceptron learning"])
+
+    print(delta_perceptron.n_errors)
 
 if __name__ == "__main__":
     # test_perceptron_learning()
     # test_delta_learning()
-    no_bias_comparison()
+    # no_bias_comparison()
+    non_linearly_separable()
