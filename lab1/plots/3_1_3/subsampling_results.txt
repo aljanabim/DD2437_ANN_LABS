@@ -1,0 +1,20 @@
+Testing on separate test set without cutting.
+
+No cutting:
+Delta Accuracy
+Mean=0.7349333333333334, Std=0.004772141378179547
+
+25% cut from each:
+Delta Accuracy
+Mean=0.7345666666666666, Std=0.014814819907406532
+
+50% cut from A:
+Delta Accuracy
+Mean=0.6851666666666665, Std=0.015601816133600172
+
+50% cut from B:
+Delta Accuracy
+Mean=0.7550333333333333, Std=0.006027621605759789
+
+cutting from A 'tilts' the decision boundary more than it should leading to poor generalization.
+cutting from B improved accuracy, surprisingly. cutting equally did not change accuracy much.

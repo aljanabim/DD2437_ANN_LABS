@@ -145,7 +145,7 @@ class Perceptron():
         return data
 
 
-def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=None):
+def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=None, special=False):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
@@ -167,8 +167,14 @@ def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=Non
         covB = np.array([[sigmaB, 0],
                          [0, sigmaB]])
 
-    classA = np.random.multivariate_normal(meanA, covA, N)
-    classB = np.random.multivariate_normal(meanB, covB, N)
+    classA = np.random.multivariate_normal(meanA, covA**2, N)
+    classB = np.random.multivariate_normal(meanB, covB**2, N)
+
+    if special:
+        meanA_alternative = meanA.copy()
+        meanA_alternative[0] *= -1
+        classA_alternative = np.random.multivariate_normal(meanA_alternative, covA**2, N)
+        classA[:int(N/2), :] = classA_alternative[:int(N/2), :]
 
     classA_extended = np.column_stack([classA, np.ones(N)])
     classB_extended = np.column_stack([classB, -np.ones(N)])
@@ -180,10 +186,25 @@ def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=Non
     if plot:
         plt.scatter(classA[:, 0], classA[:, 1], label="Class A")
         plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
-
-        plt.plot()
+        plt.show()
 
     return data
+
+
+def cut_data(data, cut_a, cut_b):
+    class_a = data[data[:, 2] == 1]
+    class_b = data[data[:, 2] == -1]
+
+    n_a = int(len(class_a)*(1-cut_a))
+    n_b = int(len(class_a)*(1-cut_b))
+
+    class_reduced_a = class_a[np.random.choice(class_a.shape[0], n_a, replace=False), :]
+    class_reduced_b = class_b[np.random.choice(class_b.shape[0], n_b, replace=False), :]
+
+    data_reduced = np.row_stack([class_reduced_a, class_reduced_b])
+    np.random.shuffle(data_reduced)
+    return data_reduced
+
 
 def split_data(data, n_train_samples):
     n_test_samples = len(data) - n_train_samples
@@ -192,6 +213,7 @@ def split_data(data, n_train_samples):
     patterns_test = data[-n_test_samples:, :2]
     targets_test = data[-n_test_samples:, 2]
     return patterns_train, targets_train, patterns_test, targets_test
+
 
 def test_accuracy(model, patterns_test, targets_test):
     n_correct = 0
@@ -205,7 +227,7 @@ def test_accuracy(model, patterns_test, targets_test):
             n_correct += 1
         else:
             n_incorrect += 1
-        return n_correct/(n_correct + n_incorrect)
+    return n_correct/(n_correct + n_incorrect)
 
 
 def plot_decision_boundary(data, *weights, title=None, labels=None):
@@ -255,6 +277,7 @@ def plot_decision_boundary(data, *weights, title=None, labels=None):
         plt.title(title)
     plt.show()
 
+
 def plot_squared_errors(*squared_errors_list, labels=None):
     """Take list of lists squared errors and plot it."
     Keyword arg plot_labels_list allows custom labels to be set.
@@ -268,6 +291,7 @@ def plot_squared_errors(*squared_errors_list, labels=None):
     plt.ylabel("Squared error")
     plt.legend()
     plt.show()
+
 
 def plot_n_errors(*n_errors_list, labels=None):
     """Take list of lists of number of errors and plot it."
@@ -365,9 +389,6 @@ def compare_perceptron_and_delta():
                   labels=["Delta learning", "Perceptron learning"])
 
 
-
-
-
 def test_perceptron_learning():
     # Test perceptron learning
     print("DOING PERCEPTRON LEARNING")
@@ -378,8 +399,6 @@ def test_perceptron_learning():
 
     node.fit(data, data[2])
     print("FINISHED PERCEPTRON LEARNING")
-
-
 
 
 def test_delta_learning():
@@ -466,7 +485,7 @@ def no_bias_comparison():
 
 def non_linearly_separable():
     """Script that generates plots needed for 3.1.3."""
-    n_epochs = 100
+    n_epochs = 300
     learning_rate = 0.001
     n_data = 100
     n_train_samples = 100
@@ -498,9 +517,64 @@ def non_linearly_separable():
 
     print(delta_perceptron.n_errors)
 
+
+def subsampling():
+    """Script that generates plots needed for 3.1.3."""
+    np.random.seed(3)
+
+    n_trials = 100
+    cut_a = 0
+    cut_b = 0.5
+    n_epochs = 2000
+    learning_rate = 0.001
+    n_data = 200
+    n_train_samples = 100
+    n_test_samples = n_data - n_train_samples
+
+    data = generate_data(n_data, meanA = [1.0, 0.3], meanB = [0.0, -0.1], sigmaA=0.2, sigmaB=0.3, special=True)
+
+    delta_accuracy_record = []
+    perceptron_accuracy_record = []
+    for trial in range(n_trials):
+        patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
+        data_train = np.column_stack((patterns_train, targets_train))
+        data_train = cut_data(data_train, cut_a, cut_b)
+        patterns_train = data_train[:, :2]
+        targets_train = data_train[:, 2]
+
+        delta_perceptron = Perceptron(learning_method="delta",
+                                      learning_rate=learning_rate,
+                                      n_epochs=n_epochs)
+
+        delta_perceptron.fit(patterns_train, targets_train)
+
+        delta_accuracy = test_accuracy(delta_perceptron, patterns_test, targets_test)
+        delta_accuracy_record.append(delta_accuracy)
+
+    print("Delta Accuracy\nMean={}, Std={}".format(
+        np.mean(delta_accuracy_record) ,np.std(delta_accuracy_record)))
+
+
+    plot_decision_boundary(data[:n_train_samples],
+                           delta_perceptron.weights,
+                           title="Perceptron and delta learning on non-linearly separable set",
+                           labels=["Delta learning", "Perceptron learning"])
+
+    plot_decision_boundary(data[-n_test_samples:],
+                           delta_perceptron.weights,
+                           title="Perceptron and delta learning on non-linearly separable set",
+                           labels=["Delta learning", "Perceptron learning"])
+
+    plot_n_errors(delta_perceptron.n_errors,
+                  labels=["Delta learning", "Perceptron learning"])
+
+
+
+
 if __name__ == "__main__":
     # test_perceptron_learning()
     # test_delta_learning()
     # no_bias_comparison()
     # non_linearly_separable()
-    compare_perceptron_and_delta()
+    # compare_perceptron_and_delta()
+    subsampling()
