@@ -397,7 +397,7 @@ def non_linearly_separable():
     plot_decision_boundary(data[:n_train_samples],
                            delta_perceptron.weights,
                            perceptron_perceptron.weights,
-                           title="Effect of bias on delta learning",
+                           title="Perceptron and delta learning on non-linearly separable set",
                            labels=["Delta learning", "Perceptron learning"])
 
     plot_n_errors(delta_perceptron.n_errors,
