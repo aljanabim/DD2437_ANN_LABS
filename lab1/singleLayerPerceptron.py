@@ -22,6 +22,7 @@ class Perceptron():
         # Bookkeeping
         self.squared_errors = None
         self.n_errors = None
+        self.n_epochs_until_zero_error = None
 
     def predict(self, x):
         if not self.learning_method == "delta_no_bias":
@@ -68,6 +69,8 @@ class Perceptron():
             preds = self.predict_array(data)
             n_errors = np.sum(preds != symmetric_labels)
             self.n_errors.append(n_errors)
+            if not self.n_epochs_until_zero_error and n_errors == 0:
+                self.n_epochs_until_zero_error = i
 
             output = np.dot(self.weights, data) > 0
             check = output == labels
@@ -96,7 +99,7 @@ class Perceptron():
         # Tranpose so as to match assignment instruction dimensions
         data = data.transpose()
         # Randomizes initial weights
-        self.weights = np.random.normal(0, 0.5, (1, data.shape[0]))
+        self.weights = np.random.normal(0, 3, (1, data.shape[0]))
         # Run delta rule iterations
         self._delta_iterate(data, labels, n_epochs)
 
@@ -114,7 +117,7 @@ class Perceptron():
 
 
     def _delta_iterate(self, data, labels, n_epochs):
-        for _ in range(self.n_epochs):
+        for i in range(self.n_epochs):
             # Calculate squared errors
             error = self.weights @ data - labels
             error_square_sum = float(error @ error.T)
@@ -122,6 +125,8 @@ class Perceptron():
             # Calculate number of errors
             preds = self.predict_array(data)
             n_errors = np.sum(preds != labels)
+            if not self.n_epochs_until_zero_error and n_errors == 0:
+                self.n_epochs_until_zero_error = i
             self.n_errors.append(n_errors)
 
             # Delta learning rule taken from assignment instructions
@@ -278,6 +283,90 @@ def plot_n_errors(*n_errors_list, labels=None):
     plt.legend()
     plt.show()
 
+# ========================= SCRIPTS ====================================
+
+def compare_perceptron_and_delta():
+    """Script that generates plots needed for 3.1.2.1"""
+    n_epochs = 1000
+    n_data = 1000
+    n_train_samples = 100
+    n_test_samples = n_data - n_train_samples
+
+    data = generate_data(n_data, meanA = [-3, 2], meanB = [3, -2], sigmaA=0.5, sigmaB=0.5)
+    patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
+
+    learning_rates = [0.0001, 0.001, 0.01, 0.1]
+    learning_rates = np.geomspace(0.0001, 0.1, 20)
+
+    learning_rates = [0.001]
+
+    delta_errors = []
+    perceptron_errors = []
+
+    delta_converge = []
+    perceptron_converge = []
+
+    n_trials = 1
+
+    for rate in learning_rates:
+        delta_avg_converge = 0
+        perceptron_avg_converge = 0
+        for trial in range(n_trials):
+            delta_perceptron = Perceptron(learning_method="delta",
+                                          learning_rate=rate,
+                                          n_epochs=n_epochs)
+
+            perceptron_perceptron = Perceptron(learning_method="perceptron",
+                                               learning_rate=rate,
+                                               n_epochs=n_epochs)
+
+            delta_perceptron.fit(patterns_train, targets_train)
+            perceptron_perceptron.fit(patterns_train, targets_train)
+            delta_avg_converge += delta_perceptron.n_epochs_until_zero_error/n_trials
+            perceptron_avg_converge += perceptron_perceptron.n_epochs_until_zero_error/n_trials
+        # delta_errors.append(delta_perceptron.n_errors)
+        delta_converge.append(delta_avg_converge)
+
+        # perceptron_errors.append(perceptron_perceptron.n_errors)
+        perceptron_converge.append(perceptron_avg_converge)
+
+    # delta_labels = ["Delta learning with eta = {}".format(rate) for rate in learning_rates]
+    # perceptron_labels = ["Perceptron learning with eta = {}".format(rate) for rate in learning_rates]
+    # styles = ['-', '--', '-.', ':']
+    #
+    # for i, error in enumerate(delta_errors):
+    #     plt.plot(range(len(error)), error, color='blue', linestyle=styles[i], label=delta_labels[i])
+    # for i, error in enumerate(perceptron_errors):
+    #     plt.plot(range(len(error)), error, color='red', linestyle=styles[i], label=perceptron_labels[i])
+    #
+    # plt.title('Number of errors vs. training epochs')
+    # plt.xlabel("Epoch")
+    # plt.ylabel("Number of errors")
+    # plt.legend()
+    # plt.show()
+
+    plt.semilogx(learning_rates, delta_converge, label='Delta learning')
+    plt.semilogx(learning_rates, perceptron_converge, label='Perceptron learning')
+    plt.legend()
+    plt.title("Convergence time as function of learning rate")
+    plt.ylabel("No. epochs until convergence")
+    plt.xlabel("Learning rate")
+    plt.show()
+
+
+    plot_decision_boundary(data[:n_train_samples],
+                           delta_perceptron.weights,
+                           perceptron_perceptron.weights,
+                           title="Perceptron and delta learning on non-linearly separable set",
+                           labels=["Delta learning", "Perceptron learning"])
+
+    plot_n_errors(delta_perceptron.n_errors,
+                  perceptron_perceptron.n_errors,
+                  labels=["Delta learning", "Perceptron learning"])
+
+
+
+
 
 def test_perceptron_learning():
     # Test perceptron learning
@@ -289,6 +378,8 @@ def test_perceptron_learning():
 
     node.fit(data, data[2])
     print("FINISHED PERCEPTRON LEARNING")
+
+
 
 
 def test_delta_learning():
@@ -372,6 +463,7 @@ def no_bias_comparison():
                            title="Effect of bias on delta learning",
                            labels=["Delta learning with bias", "Delta learning without bias"])
 
+
 def non_linearly_separable():
     """Script that generates plots needed for 3.1.3."""
     n_epochs = 100
@@ -380,7 +472,7 @@ def non_linearly_separable():
     n_train_samples = 100
     n_test_samples = n_data - n_train_samples
 
-    data = generate_data(n_data, meanA = [-1, 2], meanB = [1, 2])
+    data = generate_data(n_data, meanA = [1.0, 0.3], meanB = [0.0, -0.1], sigmaA=0.2, sigmaB=0.5)
     patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
 
     delta_perceptron = Perceptron(learning_method="delta",
@@ -410,4 +502,5 @@ if __name__ == "__main__":
     # test_perceptron_learning()
     # test_delta_learning()
     # no_bias_comparison()
-    non_linearly_separable()
+    # non_linearly_separable()
+    compare_perceptron_and_delta()
