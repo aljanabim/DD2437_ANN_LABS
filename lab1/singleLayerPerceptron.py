@@ -124,14 +124,16 @@ class Perceptron():
         return data
 
 
-def generate_data(N, plot=False):
+def generate_data(N, plot=False, meanA = None, meanB = None):
     '''
     Generates data of two linearly seperable classes of N samples
     '''
-    meanA = [4, 2]
+    if not meanA:
+        meanA = [4, 2]
     covA = np.array([[0.2, 0],
                      [0, 0.8]])
-    meanB = [-2, 2]
+    if not meanB:
+        meanB = [-2, 2]
     covB = np.array([[0.5, 0],
                      [0, 0.5]])
     classA = np.random.multivariate_normal(meanA, covA, N)
@@ -295,7 +297,7 @@ def test_delta_learning():
 
 def no_bias_comparison():
     # Set training and testing parameters
-    n_epochs = 20
+    n_epochs = 2000
     learning_rate = 0.001
     n_data = 50
     n_train_samples = 25
@@ -303,7 +305,7 @@ def no_bias_comparison():
     n_trials = 5
 
     # Generate data
-    data = generate_data(n_data)
+    data = generate_data(n_data, meanA = [-1.5, 2], meanB = [1.5, 2])
     # Split data
     patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
 
@@ -317,16 +319,14 @@ def no_bias_comparison():
     delta_perceptron.fit(patterns_train, targets_train)
     delta_no_bias_perceptron.fit(patterns_train, targets_train)
 
-    plot_decision_boundary
-
     plot_squared_errors([delta_perceptron.squared_errors, delta_no_bias_perceptron.squared_errors],
-                        ["Delta learning", "Delta learning without bias"])
+                        ["Delta learning with bias", "Delta learning without bias"])
 
     plot_decision_boundary(data[:n_train_samples],
                            delta_perceptron.weights,
                            delta_no_bias_perceptron.weights,
                            title="Effect of bias on delta learning",
-                           labels=["Delta learning", "Delta learning without bias"])
+                           labels=["Delta learning with bias", "Delta learning without bias"])
 
 
 
