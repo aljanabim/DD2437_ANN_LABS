@@ -5,8 +5,6 @@ from matplotlib import pyplot as plt
 plt.style.use('ggplot')
 
 # np.random.seed(3)
-# %%
-
 
 class Perceptron():
     def __init__(self, learning_method="perceptron", learning_rate=0.001, n_epochs=20, n_data=None):

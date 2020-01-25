@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 plt.style.use('ggplot')
 
+np.random.seed(17)
+
 
 def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=None):
     '''
