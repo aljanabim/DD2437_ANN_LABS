@@ -1,15 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import sys
 
 plt.style.use('ggplot')
 
-def mackey_glass_time_series(n_steps, step_size=1, x_0=1.5, beta=0.2, gamma=0.1, n=10, tau=25):
+def mackey_glass_time_series(n_steps, step_size=1, x_0=1.5, beta=0.2, gamma=0.1, n=10, tau=25, plot=False):
     x = np.zeros((n_steps))
     x[0] = x_0
     for i in range(n_steps-1):
         x_tau = x[i - tau] if i >= tau else 0
         x[i+1] = x[i] + step_size*(beta*x_tau/(1 + x_tau**n) - gamma*x[i])
+
+    if plot:
+        plt.plot(x)
+        plt.title("Mackey-Glass Time Series")
+        plt.show()
+
     return x
 
 def generate_data(n_samples, offset=300):
@@ -22,6 +29,10 @@ def generate_data(n_samples, offset=300):
 
     return np.array(patterns), np.array(targets)
 
+def extend_with_bias(patterns):
+    n_patterns = patterns.shape[0]
+    ones = torch.ones((n_patterns, 1))
+    return torch.cat((patterns, ones), 1)
 
 def split_data(patterns, targets, validation_fraction=0.15, test_fraction=0.25):
     n_samples = len(patterns)
@@ -29,11 +40,11 @@ def split_data(patterns, targets, validation_fraction=0.15, test_fraction=0.25):
     n_validation = int(n_samples*validation_fraction)
     n_test = int(n_samples*test_fraction)
 
-    train_patterns = torch.tensor(patterns[:n_train], dtype=torch.float)
+    train_patterns = extend_with_bias(torch.tensor(patterns[:n_train], dtype=torch.float))
     train_targets = torch.tensor(targets[:n_train], dtype=torch.float)
-    validation_patterns = torch.tensor(patterns[n_train:(n_train+n_validation)], dtype=torch.float)
+    validation_patterns = extend_with_bias(torch.tensor(patterns[n_train:(n_train+n_validation)], dtype=torch.float))
     validation_targets = torch.tensor(targets[n_train:(n_train+n_validation)], dtype=torch.float)
-    test_patterns = torch.tensor(patterns[-n_test:], dtype=torch.float)
+    test_patterns = extend_with_bias(torch.tensor(patterns[-n_test:], dtype=torch.float))
     test_targets = torch.tensor(targets[-n_test:], dtype=torch.float)
 
     return train_patterns, train_targets, validation_patterns, validation_targets, test_patterns, test_targets
@@ -54,6 +65,7 @@ class FullyConnectedNet:
         for i in range(len(self.dim_hidden)-1):
             self.weights_hidden.append(
                 torch.randn(self.dim_hidden[i], self.dim_hidden[i+1], requires_grad=True))
+        print(len(self.weights_hidden))
         self.weights_out = torch.randn(self.dim_hidden[-1], self.dim_out, requires_grad=True)
         self.weights_all = [self.weights_in, *self.weights_hidden, self.weights_out]
 
@@ -98,6 +110,8 @@ class FullyConnectedNet:
             return l1_regularizer(weights_set)
 
     def fit(self, train_patterns, train_targets, validation_patterns, validation_targets):
+        # Add column of 1's to handle bias
+
         validation_loss = np.infty
         delta_validation_loss = np.infty
         iter = 0
@@ -132,10 +146,10 @@ class FullyConnectedNet:
 
 
 # Hyperparameters
-hidden_layer_dims = [5, 5]
-learning_rate = 1e-9
-convergence_threshold = 1e-12
-max_iter = 50000
+hidden_layer_dims = [8]
+learning_rate = 1e-10     #1e-6 seems to be the largest usable learning rate
+convergence_threshold = 1e-15
+max_iter = 20000
 n_samples = 1200
 
 # Generate and process data
@@ -167,3 +181,5 @@ plt.plot(test_predictions.detach().numpy(), label='Prediction')
 plt.plot(test_targets.detach().numpy(), label='Target')
 plt.legend()
 plt.show()
+
+print("end")
