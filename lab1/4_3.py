@@ -69,7 +69,7 @@ class FullyConnectedNet:
         x = torch.sigmoid(torch.mm(input, self.weights_in))
         # Hidden layers
         for weights in self.weights_hidden:
-            x = torch.sigmoid(torch.mm(x, self.weights))
+            x = torch.sigmoid(torch.mm(x, weights))
         # Output layer
         output = torch.mm(x, self.weights_out)
 
@@ -98,23 +98,24 @@ class FullyConnectedNet:
 
                 validation_predictions = self.forward(validation_patterns)
                 validation_loss = self.loss(validation_predictions, validation_targets)
-                self.validation_loss_record.append(validation_loss)
+                self.validation_loss_record.append(validation_loss/len(validation_targets))
                 delta_validation_loss = abs(old_validation_loss - validation_loss)
 
             # Progress bar
             if iter % int(max_iter/10) == 0:
-                print(iter/max_iter)
-                print(iter, train_loss.item())
+                print("Training progress: {}".format(iter/max_iter))
+                print("Iteration number {}. Average validation loss per sample: {:.2f}".format(
+                    iter, validation_loss/len(validation_targets)))
 
             iter += 1
 
 
 
 # Hyperparameters
-hidden_layer_dims = [5]
-learning_rate = 1e-8
+hidden_layer_dims = [5, 5]
+learning_rate = 1e-9
 convergence_threshold = 1e-12
-max_iter = 10000
+max_iter = 50000
 n_samples = 1200
 
 # Generate and process data
@@ -141,7 +142,7 @@ plt.show()
 # Test
 test_predictions = net.forward(test_patterns)
 test_loss = net.loss(test_predictions, test_targets)
-print("Test loss: {}".format(test_loss/len(test_predictions)))
+print("Average test loss per sample: {:.2f}".format(test_loss/len(test_predictions)))
 plt.plot(test_predictions.detach().numpy(), label='Prediction')
 plt.plot(test_targets.detach().numpy(), label='Target')
 plt.legend()
