@@ -40,7 +40,8 @@ def split_data(patterns, targets, validation_fraction=0.15, test_fraction=0.25):
 
 
 class FullyConnectedNet:
-    def __init__(self, network_dims, learning_rate=1e-6, convergence_threshold=1e-9, max_iter=100000):
+    def __init__(self, network_dims, learning_rate=1e-6, convergence_threshold=1e-9,
+                       max_iter=100000, reg_factor=0.0005):
         # Set up network dimensions
         self.network_dims = network_dims
         self.dim_in = network_dims[0]
@@ -78,6 +79,24 @@ class FullyConnectedNet:
     def loss(self, predictions, targets):
         return (predictions - targets).pow(2).sum()
 
+    def l1_regularizer(self, weights_set):
+        loss = 0
+        for weights in weights_set:
+            loss += weights.abs().sum()
+        return loss
+
+    def l2_regularizer(self, weights_set):
+        loss = 0
+        for weights in weights_set:
+            loss += weights.pow(2).sum()
+        return loss
+
+    def reg_loss(self, weights_set, mode="l2"):
+        if mode == "l2":
+            return l2_regularizer(weights_set)
+        elif mode == "l1":
+            return l1_regularizer(weights_set)
+
     def fit(self, train_patterns, train_targets, validation_patterns, validation_targets):
         validation_loss = np.infty
         delta_validation_loss = np.infty
@@ -88,7 +107,8 @@ class FullyConnectedNet:
             old_validation_loss = validation_loss
 
             train_predictions = self.forward(train_patterns)
-            train_loss = self.loss(train_predictions, train_targets)
+            train_loss = (self.loss(train_predictions, train_targets)
+                          + self.reg_factor * self.reg_loss(self.weights_all))
             train_loss.backward()
 
             with torch.no_grad():
