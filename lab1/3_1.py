@@ -202,12 +202,36 @@ def cut_data(data, cut_a, cut_b):
     valid_a = class_a[n_a:]
     valid_b = class_b[n_b:]
 
-
-
     train_set = np.row_stack([train_a, train_b])
     np.random.shuffle(train_set)
     valid_set = np.row_stack([valid_a, valid_b])
     np.random.shuffle(valid_set)
+
+    return train_set, valid_set
+
+
+def cut_asymmetric(data, cut_a, cut_b):
+    class_a = data[data[:, 2] == 1]
+    class_b = data[data[:, 2] == -1]
+
+    class_a_upper = class_a[class_a[:, 0] > 0]
+    class_a_lower = class_a[class_a[:, 0] < 0]
+
+    n_a_lower = int(len(class_a_lower)*0.2)
+    n_a_upper = int(len(class_a_upper)*0.8)
+
+    class_a_upper_train = class_a_upper[:n_a_upper]
+    class_a_upper_valid = class_a_upper[n_a_upper:]
+    class_a_lower_train = class_a_upper[:n_a_lower]
+    class_a_lower_valid = class_a_upper[n_a_lower:]
+    valid_set = np.row_stack([class_a_upper_valid, class_a_lower_valid])
+
+    class_a_train = np.row_stack([class_a_upper_train, class_a_lower_train])
+    train_set = np.row_stack([class_a_train, class_b])
+
+    np.random.shuffle(trian_set)
+    np.random.shuffle(valid_set)
+
 
     return train_set, valid_set
 
@@ -497,7 +521,7 @@ def non_linearly_separable():
     n_train_samples = 100
     n_test_samples = n_data - n_train_samples
 
-    data = generate_data(n_data, meanA = [1.0, 0.3], meanB = [0.0, -0.1], sigmaA=0.2, sigmaB=0.5)
+    data = generate_data(n_data, meanA = [1.0, 0.3], meanB = [0.0, -0.1], sigmaA=0.2, sigmaB=0.3)
     patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
 
     delta_perceptron = Perceptron(learning_method="delta",
@@ -529,8 +553,8 @@ def subsampling():
     np.random.seed(3)
 
     n_trials = 100
-    cut_a = 0.25
-    cut_b = 0.25
+    cut_a = 0.5
+    cut_b = 0.0
     n_epochs = 2000
     learning_rate = 0.001
     n_data = 100
@@ -563,12 +587,12 @@ def subsampling():
         np.mean(delta_accuracy_record) ,np.std(delta_accuracy_record)))
 
 
-    plot_decision_boundary(data[:n_train_samples],
+    plot_decision_boundary(data_train,
                            delta_perceptron.weights,
                            title="Perceptron and delta learning on non-linearly separable set",
                            labels=["Delta learning", "Perceptron learning"])
 
-    plot_decision_boundary(data[-n_test_samples:],
+    plot_decision_boundary(data_valid,
                            delta_perceptron.weights,
                            title="Perceptron and delta learning on non-linearly separable set",
                            labels=["Delta learning", "Perceptron learning"])
