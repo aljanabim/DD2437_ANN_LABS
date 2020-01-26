@@ -232,7 +232,6 @@ def cut_asymmetric(data, cut_a, cut_b):
     np.random.shuffle(trian_set)
     np.random.shuffle(valid_set)
 
-
     return train_set, valid_set
 
 

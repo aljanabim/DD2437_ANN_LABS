@@ -149,8 +149,6 @@ def cut_data(data, cut_a, cut_b):
     valid_a = class_a[n_a:]
     valid_b = class_b[n_b:]
 
-
-
     train_set = np.row_stack([train_a, train_b])
     np.random.shuffle(train_set)
     valid_set = np.row_stack([valid_a, valid_b])
@@ -158,6 +156,29 @@ def cut_data(data, cut_a, cut_b):
 
     return train_set, valid_set
 
+def cut_asymmetric(data, cut_a, cut_b):
+    class_a = data[data[:, 2] == 1]
+    class_b = data[data[:, 2] == -1]
+
+    class_a_upper = class_a[class_a[:, 0] > 0]
+    class_a_lower = class_a[class_a[:, 0] < 0]
+
+    n_a_lower = int(len(class_a_lower)*0.2)
+    n_a_upper = int(len(class_a_upper)*0.8)
+
+    class_a_upper_train = class_a_upper[:n_a_upper]
+    class_a_upper_valid = class_a_upper[n_a_upper:]
+    class_a_lower_train = class_a_upper[:n_a_lower]
+    class_a_lower_valid = class_a_upper[n_a_lower:]
+    valid_set = np.row_stack([class_a_upper_valid, class_a_lower_valid])
+
+    class_a_train = np.row_stack([class_a_upper_train, class_a_lower_train])
+    train_set = np.row_stack([class_a_train, class_b])
+
+    np.random.shuffle(trian_set)
+    np.random.shuffle(valid_set)
+
+    return train_set, valid_set
 
 def plot_decision_boundry(data, res, predictor):
     x_min = np.min(data[:, 0])-0.5
