@@ -11,6 +11,7 @@ plt.style.use('ggplot')
 # ================================ DATA HANDLING ===============================
 
 def mackey_glass_time_series(n_steps, step_size=1, x_0=1.5, beta=0.2, gamma=0.1, n=10, tau=25, plot=False):
+    """Mackey-Glass time series as defined in the instructions."""
     x = np.zeros((n_steps))
     x[0] = x_0
     for i in range(n_steps-1):
@@ -26,6 +27,7 @@ def mackey_glass_time_series(n_steps, step_size=1, x_0=1.5, beta=0.2, gamma=0.1,
 
 
 def generate_data(n_samples, offset=300, plot=False):
+    """Sample from Mackey-Glass time series and produce pattern, target pairs according to instructions."""
     series = mackey_glass_time_series(n_samples+offset+5, plot=plot)
     patterns = []
     targets = []
@@ -39,12 +41,14 @@ def generate_data(n_samples, offset=300, plot=False):
 
 
 def extend_with_bias(patterns):
+    """Add column of ones to pattern, in order to accomodate bias weights."""
     n_patterns = patterns.shape[0]
     ones = torch.ones((n_patterns, 1))
     return torch.cat((patterns, ones), 1)
 
 
 def split_data(patterns, targets, validation_fraction=0.15, test_fraction=0.25):
+    """Split data into training, validation and testing set, and add bias to patterns."""
     n_samples = len(patterns)
     n_train = int(n_samples*(1 - validation_fraction - test_fraction))
     n_validation = int(n_samples*validation_fraction)
@@ -63,6 +67,7 @@ def split_data(patterns, targets, validation_fraction=0.15, test_fraction=0.25):
 # ================================ PLOTTING FUNCTIONS ===============================
 
 def plot_weights_histogram(weights_list):
+    """Takes list of weights and plots a histogram."""
     for weights in weights_list:
         print(weights.shape)
     flat_weights = [w.detach().numpy().flatten() for w in weights_list]
@@ -73,54 +78,89 @@ def plot_weights_histogram(weights_list):
     plt.show()
 
 
+# ================================ MODEL SELECTION ============================
+
+def loss_function(predictions, targets):
+    return (predictions - targets).pow(2).sum().item()
 
 
+def model_selection(models, train_patterns, train_targets, validation_patterns, validation_targets):
+    """Trains and evaluates given models on given data."""
+    loss_list = []
+    for i, model in enumerate(models):
+        model.fit(train_patterns, train_targets, validation_patterns, validation_targets)
+        with torch.no_grad():
+            validation_predictions = model.forward(validation_patterns)
+            loss = loss_function(validation_predictions, validation_targets)
+            loss_list.append(loss)
+
+    for i in range(len(models)):
+        print("Model {} loss: {:.2f}".format(i, loss_list[i]))
+
+    return models[loss_list.index(min(loss_list))]
 
 
+# ================================ BENCHMARKING ===============================
 
-# ================================ BENCHMARKING AND TESTING ===============================
-
-def average_loss(n_trials, hidden_layer_dims, learning_rate, convergence_threshold, max_iter, reg_factor):
-
-    n_samples = 1200
-
-    # Generate and process data
-    patterns, targets = generate_data(n_samples, plot=True)
-    train_patterns, train_targets, validation_patterns, validation_targets,  test_patterns, test_targets = split_data(
-        patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
-
-
-    # Set up network
-    dim_in = train_patterns.shape[1]
-    print(train_patterns[0])
-    dim_out = 1
-    layer_dims = [dim_in, *hidden_layer_dims, dim_out]
-
+def average_loss(n_trials, net, train_patterns, train_targets, validation_patterns,
+                 validation_targets, test_patterns, test_targets):
+    """Takes model and data and evaluates model on data."""
     losses = []
     for trial in range(n_trials):
-        net = FullyConnectedNet(layer_dims,
-                                learning_rate=learning_rate,
-                                convergence_threshold=convergence_threshold,
-                                max_iter=max_iter,
-                                reg_factor=reg_factor)
-
+        net.reset_weights()
         net.fit(train_patterns, train_targets, validation_patterns, validation_targets)
-        # net.fit_with_torch_optimizer(train_patterns, train_targets, validation_patterns, validation_targets)
 
         test_predictions = net.forward(test_patterns)
         test_loss = net.loss(test_predictions, test_targets)
-        losses.append(test_loss.item() / n_trials)
+        losses.append(test_loss.item())
 
     return np.mean(losses), np.std(losses)
 
-def test_average():
 
+# ================================ TESTING ===============================
+
+def test_average():
+    """Example illustrating the use of the average loss benchmark."""
     hidden_layer_dims = [6]
     learning_rate = 1e-8     #1e-6 seems to be the largest usable learning rate
     convergence_threshold = 1e-13
     max_iter = 100
     reg_factor = 0.0005
     print(average_loss(100, hidden_layer_dims, learning_rate, convergence_threshold, max_iter, reg_factor))
+
+
+def test_model_selection():
+    """Example illustrating the use of model selection."""
+    # Hyperparameters
+    learning_rate = 1e-10     #1e-6 seems to be the largest usable learning rate
+    convergence_threshold = 1e-13
+    max_iter = 100
+    reg_factor = 0.0005
+    n_samples = 1200
+
+    # Generate and process data
+    patterns, targets = generate_data(n_samples, plot=False)
+    train_patterns, train_targets, validation_patterns, validation_targets,  test_patterns, test_targets = split_data(
+        patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
+
+    # Build models
+    hidden_layer_dims_list = [[4],[8]]
+    models = []
+    for hidden_layer_dims in hidden_layer_dims_list:
+        dim_in = train_patterns.shape[1]
+        dim_out = 1
+        layer_dims = [dim_in, *hidden_layer_dims, dim_out]
+        net = FullyConnectedNet(layer_dims,
+                                learning_rate=learning_rate,
+                                convergence_threshold=convergence_threshold,
+                                max_iter=max_iter,
+                                reg_factor=reg_factor)
+        models.append(net)
+
+    # Run model selection
+    best_net = model_selection(
+        models, train_patterns, train_targets, validation_patterns, validation_targets)
+
 
 def main():
     # Hyperparameters
@@ -132,7 +172,7 @@ def main():
     n_samples = 1200
 
     # Generate and process data
-    patterns, targets = generate_data(n_samples, plot=True)
+    patterns, targets = generate_data(n_samples, plot=False)
     train_patterns, train_targets, validation_patterns, validation_targets,  test_patterns, test_targets = split_data(
         patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
 
@@ -168,4 +208,5 @@ def main():
 
     print("end")
 
-main()
+# main()
+test_model_selection()

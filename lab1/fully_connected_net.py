@@ -31,12 +31,17 @@ class FullyConnectedNet:
         # Set up bookkeeping
         self.validation_loss_record = None
 
+    def reset_weights(self, input):
+        for weights in weights_all:
+            weights.randn_()
+            weights.grad.zero_()
+
     def forward(self, input):
         # Input layer
-        x = torch.tanh(torch.mm(input, self.weights_in))
+        x = torch.sigmoid(torch.mm(input, self.weights_in))
         # Hidden layers
         for weights in self.weights_hidden:
-            x = torch.tanh(torch.mm(x, weights))
+            x = torch.sigmoid(torch.mm(x, weights))
         # Output layer
         output = torch.mm(x, self.weights_out)
 
@@ -77,7 +82,7 @@ class FullyConnectedNet:
 
             train_predictions = self.forward(train_patterns)
             train_loss = (self.loss(train_predictions, train_targets)
-                          + self.reg_factor * self.reg_loss(self.weights_all, mode=None))
+                          + self.reg_factor * self.reg_loss(self.weights_all, mode='l2'))
             train_loss.backward()
 
             with torch.no_grad():
@@ -101,8 +106,8 @@ class FullyConnectedNet:
 
     def fit_with_torch_optimizer(self, train_patterns, train_targets, validation_patterns,
                                  validation_targets, learning_rate=1e-4):
-        optimizer = torch.optim.Adam(self.weights_all, lr=learning_rate)
         self.validation_loss_record = []
+        optimizer = torch.optim.Adam(self.weights_all, lr=learning_rate)
         for t in range(1000):
             train_predictions = self.forward(train_patterns)
             loss = self.loss(train_predictions, train_targets)
