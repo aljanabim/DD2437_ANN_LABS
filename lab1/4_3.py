@@ -2,8 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import sys
+from sklearn.metrics import mean_squared_error
 
+from sklearn_net import SklearnNet
 from fully_connected_net import FullyConnectedNet
+from sequential_net import SequentialNet
 
 plt.style.use('ggplot')
 
@@ -54,11 +57,11 @@ def split_data(patterns, targets, validation_fraction=0.15, test_fraction=0.25):
     n_validation = int(n_samples*validation_fraction)
     n_test = int(n_samples*test_fraction)
 
-    train_patterns = extend_with_bias(torch.tensor(patterns[:n_train], dtype=torch.float))
+    train_patterns = torch.tensor(patterns[:n_train], dtype=torch.float)
     train_targets = torch.tensor(targets[:n_train], dtype=torch.float)
-    validation_patterns = extend_with_bias(torch.tensor(patterns[n_train:(n_train+n_validation)], dtype=torch.float))
+    validation_patterns = torch.tensor(patterns[n_train:(n_train+n_validation)], dtype=torch.float)
     validation_targets = torch.tensor(targets[n_train:(n_train+n_validation)], dtype=torch.float)
-    test_patterns = extend_with_bias(torch.tensor(patterns[-n_test:], dtype=torch.float))
+    test_patterns = torch.tensor(patterns[-n_test:], dtype=torch.float)
     test_targets = torch.tensor(targets[-n_test:], dtype=torch.float)
 
     return train_patterns, train_targets, validation_patterns, validation_targets, test_patterns, test_targets
@@ -144,7 +147,7 @@ def test_model_selection():
         patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
 
     # Build models
-    hidden_layer_dims_list = [[4],[8]]
+    hidden_layer_dims_list = [[4], [8]]
     models = []
     for hidden_layer_dims in hidden_layer_dims_list:
         dim_in = train_patterns.shape[1]
@@ -162,17 +165,107 @@ def test_model_selection():
         models, train_patterns, train_targets, validation_patterns, validation_targets)
 
 
-def main():
+def test_sequential():
     # Hyperparameters
-    hidden_layer_dims = [8]
-    learning_rate = 1e-5     #1e-6 seems to be the largest usable learning rate
+    hidden_layer_dims = [3,3]
+    learning_rate = 1e-4    #1e-6 seems to be the largest usable learning rate
     convergence_threshold = 1e-13
-    max_iter = 50000
-    reg_factor = 0.005
+    max_iter = 50
+    reg_factor = 0.64
     n_samples = 1200
 
     # Generate and process data
-    patterns, targets = generate_data(n_samples, plot=False)
+    patterns, targets = generate_data(n_samples, plot=True)
+    train_patterns, train_targets, validation_patterns, validation_targets,  test_patterns, test_targets = split_data(
+        patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
+
+
+    # Set up network
+    dim_in = train_patterns.shape[1]
+    print(train_patterns[0])
+    dim_out = 1
+    layer_dims = [dim_in, *hidden_layer_dims, dim_out]
+    net = SequentialNet(layer_dims,
+                        learning_rate=learning_rate,
+                        convergence_threshold=convergence_threshold,
+                        max_iter=max_iter,
+                        reg_factor=reg_factor)
+    # Train networks
+    net.fit(train_patterns, train_targets, validation_patterns, validation_targets)
+
+    plt.plot(net.validation_loss_record[:])
+    plt.show()
+
+    # Test
+    test_predictions = net.model(test_patterns)
+    test_loss = net.loss(test_predictions, test_targets)
+    print("Average test loss per sample: {:.2f}".format(test_loss/len(test_predictions)))
+    plt.plot(test_predictions.detach().numpy(), label='Prediction')
+    plt.plot(test_targets.detach().numpy(), label='Target')
+    plt.legend()
+    plt.show()
+
+    print("end")
+
+def test_sklearn():
+    # Hyperparameters
+    hidden_layer_dims = [2,3]
+    learning_rate = 0.001   #1e-6 seems to be the largest usable learning rate
+    convergence_threshold = 1e-13
+    max_iter = 100
+    reg_factor = 0
+    n_samples = 1200
+
+    # Generate and process data
+    patterns, targets = generate_data(n_samples, plot=True)
+    train_patterns, train_targets, validation_patterns, validation_targets,  test_patterns, test_targets = split_data(
+        patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
+
+
+    train_patterns = train_patterns.detach().numpy()
+    train_targets = train_targets.detach().numpy()
+    validation_patterns = validation_patterns.detach().numpy()
+    validation_targets = validation_targets.detach().numpy()
+    test_patterns = test_patterns.detach().numpy()
+    test_targets = test_targets.detach().numpy()
+
+    # Set up network
+    dim_in = train_patterns.shape[1]
+    print(train_patterns[0])
+    dim_out = 1
+    layer_dims = [dim_in, *hidden_layer_dims, dim_out]
+    net = SklearnNet(layer_dims,
+                        learning_rate=learning_rate,
+                        convergence_threshold=convergence_threshold,
+                        max_iter=max_iter,
+                        reg_factor=reg_factor)
+    # Train networks
+    net.fit(train_patterns, train_targets, validation_patterns, validation_targets)
+
+    plt.plot(net.validation_loss_record[:])
+    plt.show()
+
+    # Test
+    test_predictions = net.model.predict(test_patterns)
+    test_loss = net.loss(test_predictions, test_targets)
+    print("Average test loss per sample: {:.2f}".format(test_loss/len(test_predictions)))
+    plt.plot(test_predictions, label='Prediction')
+    plt.plot(test_targets, label='Target')
+    plt.legend()
+    plt.show()
+
+
+def main():
+    # Hyperparameters
+    hidden_layer_dims = [2, 2]
+    learning_rate = 0.001     #1e-6 seems to be the largest usable learning rate
+    convergence_threshold = 1e-13
+    max_iter = 10
+    reg_factor = 0.3
+    n_samples = 1200
+
+    # Generate and process data
+    patterns, targets = generate_data(n_samples, plot=True)
     train_patterns, train_targets, validation_patterns, validation_targets,  test_patterns, test_targets = split_data(
         patterns, targets, validation_fraction=200/1200, test_fraction=200/1200)
 
@@ -208,5 +301,8 @@ def main():
 
     print("end")
 
-main()
+# main()
 # test_model_selection()
+# test_sequential()
+
+test_sklearn()
