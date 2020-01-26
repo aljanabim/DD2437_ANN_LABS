@@ -210,7 +210,7 @@ def cut_data(data, cut_a, cut_b):
     return train_set, valid_set
 
 
-def cut_asymmetric(data, cut_a, cut_b):
+def cut_asymmetric(data):
     class_a = data[data[:, 2] == 1]
     class_b = data[data[:, 2] == -1]
 
@@ -222,14 +222,14 @@ def cut_asymmetric(data, cut_a, cut_b):
 
     class_a_upper_train = class_a_upper[:n_a_upper]
     class_a_upper_valid = class_a_upper[n_a_upper:]
-    class_a_lower_train = class_a_upper[:n_a_lower]
-    class_a_lower_valid = class_a_upper[n_a_lower:]
+    class_a_lower_train = class_a_lower[:n_a_lower]
+    class_a_lower_valid = class_a_lower[n_a_lower:]
     valid_set = np.row_stack([class_a_upper_valid, class_a_lower_valid])
 
     class_a_train = np.row_stack([class_a_upper_train, class_a_lower_train])
     train_set = np.row_stack([class_a_train, class_b])
 
-    np.random.shuffle(trian_set)
+    np.random.shuffle(train_set)
     np.random.shuffle(valid_set)
 
     return train_set, valid_set
@@ -567,7 +567,8 @@ def subsampling():
     for trial in range(n_trials):
         patterns_train, targets_train, patterns_test, targets_test = split_data(data, n_train_samples)
         data_train = np.column_stack((patterns_train, targets_train))
-        data_train, data_valid = cut_data(data_train, cut_a, cut_b)
+        # data_train, data_valid = cut_data(data_train, cut_a, cut_b)
+        data_train, data_valid = cut_asymmetric(data_train)
         patterns_train = data_train[:, :2]
         targets_train = data_train[:, 2]
 
