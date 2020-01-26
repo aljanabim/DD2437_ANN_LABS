@@ -192,10 +192,8 @@ def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=Non
 def cut_data(data, cut_a, cut_b):
     class_a = data[data[:, 2] == 1]
     class_b = data[data[:, 2] == -1]
-
     np.random.shuffle(class_a)
     np.random.shuffle(class_b)
-
     n_a = int(len(class_a)*(1-cut_a))
     n_b = int(len(class_b)*(1-cut_b))
 
@@ -204,8 +202,12 @@ def cut_data(data, cut_a, cut_b):
     valid_a = class_a[n_a:]
     valid_b = class_b[n_b:]
 
-    train_set = np.random.shuffle(np.row_stack([train_a, train_b]))
-    valid_set = np.random.shuffle(np.row_stack([valid_a, valid_b]))
+
+
+    train_set = np.row_stack([train_a, train_b])
+    np.random.shuffle(train_set)
+    valid_set = np.row_stack([valid_a, valid_b])
+    np.random.shuffle(valid_set)
 
     return train_set, valid_set
 
@@ -527,8 +529,8 @@ def subsampling():
     np.random.seed(3)
 
     n_trials = 100
-    cut_a = 0
-    cut_b = 0.5
+    cut_a = 0.25
+    cut_b = 0.25
     n_epochs = 2000
     learning_rate = 0.001
     n_data = 100
