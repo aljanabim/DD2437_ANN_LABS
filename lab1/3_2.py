@@ -141,7 +141,7 @@ def cut_data(data, cut_a, cut_b):
     class_b = data[data[:, 2] == -1]
 
     numpy.random.shuffle(class_a)
-    numpy.random.shuffle(class_b))
+    numpy.random.shuffle(class_b)
 
     n_a = int(len(class_a)*(1-cut_a))
     n_b = int(len(class_b)*(1-cut_b))
