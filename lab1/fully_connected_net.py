@@ -13,13 +13,13 @@ class FullyConnectedNet:
         self.dim_out = network_dims[-1]
 
         # Set up weights
-        self.weights_in = torch.randn(self.dim_in, self.dim_hidden[0], requires_grad=True)
+        self.weights_in = torch.randn(self.dim_in+1, self.dim_hidden[0], requires_grad=True)
         self.weights_hidden = []
         for i in range(len(self.dim_hidden)-1):
             self.weights_hidden.append(
-                torch.randn(self.dim_hidden[i], self.dim_hidden[i+1], requires_grad=True))
+                torch.randn(self.dim_hidden[i]+1, self.dim_hidden[i+1], requires_grad=True))
         print(len(self.weights_hidden))
-        self.weights_out = torch.randn(self.dim_hidden[-1], self.dim_out, requires_grad=True)
+        self.weights_out = torch.randn(self.dim_hidden[-1]+1, self.dim_out, requires_grad=True)
         self.weights_all = [self.weights_in, *self.weights_hidden, self.weights_out]
 
         # Set up learning hyperparameters
@@ -37,14 +37,20 @@ class FullyConnectedNet:
             weights.randn_()
             weights.grad.zero_()
 
+    def extend_with_bias(self, matrix):
+        """Add column of ones to matrix, in order to accomodate bias weights."""
+        n_rows = matrix.shape[0]
+        ones = torch.ones((n_rows, 1))
+        return torch.cat((matrix, ones), 1)
+
     def forward(self, input):
         # Input layer
-        x = torch.sigmoid(torch.mm(input, self.weights_in))
+        x = torch.sigmoid(torch.mm(self.extend_with_bias(input), self.weights_in))
         # Hidden layers
         for weights in self.weights_hidden:
-            x = torch.sigmoid(torch.mm(x, weights))
+            x = torch.sigmoid(torch.mm(self.extend_with_bias(x), weights))
         # Output layer
-        output = torch.mm(x, self.weights_out)
+        output = torch.mm(self.extend_with_bias(x), self.weights_out)
 
         return output
 
