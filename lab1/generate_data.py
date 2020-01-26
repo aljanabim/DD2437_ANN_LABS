@@ -42,5 +42,4 @@ def generate_data(N, plot=False, meanA=None, meanB=None, sigmaA=None, sigmaB=Non
         plt.scatter(classB[:, 0], classB[:, 1], label="Class B")
 
         plt.plot()
-        plt.show()
     return data
