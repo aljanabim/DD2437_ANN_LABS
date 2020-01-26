@@ -136,6 +136,27 @@ def classifier(val):
         return -1
 
 
+def cut_data(data, cut_a, cut_b):
+    class_a = data[data[:, 2] == 1]
+    class_b = data[data[:, 2] == -1]
+
+    numpy.random.shuffle(class_a)
+    numpy.random.shuffle(class_b))
+
+    n_a = int(len(class_a)*(1-cut_a))
+    n_b = int(len(class_b)*(1-cut_b))
+
+    train_a = class_a[:n_a]
+    train_b = class_b[:n_b]
+    valid_a = class_a[n_a:]
+    valid_b = class_b[n_b:]
+
+    train_set = np.random.shuffle(np.row_stack([train_a, train_b]))
+    valid_set = np.random.shuffle(np.row_stack([valid_a, valid_b]))
+
+    return train_set, valid_set
+
+
 def plot_decision_boundry(data, res, predictor):
     x_min = np.min(data[:, 0])-0.5
     x_max = np.max(data[:, 0])+0.5
