@@ -164,11 +164,11 @@ def test_model_selection():
 
 def main():
     # Hyperparameters
-    hidden_layer_dims = [6]
-    learning_rate = 1e-10     #1e-6 seems to be the largest usable learning rate
+    hidden_layer_dims = [8]
+    learning_rate = 1e-5     #1e-6 seems to be the largest usable learning rate
     convergence_threshold = 1e-13
-    max_iter = 100
-    reg_factor = 0.0005
+    max_iter = 50000
+    reg_factor = 0.005
     n_samples = 1200
 
     # Generate and process data
@@ -188,8 +188,8 @@ def main():
                             reg_factor=reg_factor)
 
     # Train networks
-    net.fit(train_patterns, train_targets, validation_patterns, validation_targets)
-    # net.fit_with_torch_optimizer(train_patterns, train_targets, validation_patterns, validation_targets)
+    # net.fit(train_patterns, train_targets, validation_patterns, validation_targets)
+    net.fit_with_torch_optimizer(train_patterns, train_targets, validation_patterns, validation_targets)
 
     plot_weights_histogram(net.weights_all)
 
@@ -208,5 +208,5 @@ def main():
 
     print("end")
 
-# main()
-test_model_selection()
+main()
+# test_model_selection()

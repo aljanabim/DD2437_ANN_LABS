@@ -4,7 +4,7 @@ import torch
 import sys
 
 class FullyConnectedNet:
-    def __init__(self, network_dims, learning_rate=1e-6, convergence_threshold=1e-9,
+    def __init__(self, network_dims, learning_rate=1e-6, convergence_threshold=1e-9, min_iter=100,
                        max_iter=100000, reg_factor=0.0005):
         # Set up network dimensions
         self.network_dims = network_dims
@@ -25,6 +25,7 @@ class FullyConnectedNet:
         # Set up learning hyperparameters
         self.learning_rate = learning_rate
         self.convergence_threshold = convergence_threshold
+        self.min_iter = min_iter
         self.max_iter = max_iter
         self.reg_factor = reg_factor
 
@@ -70,14 +71,22 @@ class FullyConnectedNet:
         elif mode == "l2":
             return self.l2_regularizer(weights_set)
 
+    def _is_monotonically_increasing(self, values):
+        increasing = True
+        for i in range(len(values)-1):
+            # When multiplied, True = 1 and False = 0
+            increasing *= (values[i] <= values[i+1])
+        return increasing
+
     def fit(self, train_patterns, train_targets, validation_patterns, validation_targets):
         validation_loss = np.infty
         delta_validation_loss = np.infty
-        iter = 0
         self.validation_loss_record = []
 
         # while delta_validation_loss > self.convergence_threshold and iter < self.max_iter:
-        while iter < self.max_iter:
+        iter = 0
+        stop_flag = False
+        while iter < self.max_iter and not stop_flag:
             old_validation_loss = validation_loss
 
             train_predictions = self.forward(train_patterns)
@@ -94,7 +103,9 @@ class FullyConnectedNet:
                 validation_predictions = self.forward(validation_patterns)
                 validation_loss = self.loss(validation_predictions, validation_targets).item()
                 self.validation_loss_record.append(validation_loss/len(validation_targets))
-                delta_validation_loss = abs(old_validation_loss - validation_loss)
+                if iter > self.min_iter:
+                    if self._is_monotonically_increasing(self.validation_loss_record[-4:]):
+                        stop_flag = True
 
             # Progress bar
             if iter % int(self.max_iter/10) == 0:
@@ -105,19 +116,34 @@ class FullyConnectedNet:
             iter += 1
 
     def fit_with_torch_optimizer(self, train_patterns, train_targets, validation_patterns,
-                                 validation_targets, learning_rate=1e-4):
+                                 validation_targets):
         self.validation_loss_record = []
-        optimizer = torch.optim.Adam(self.weights_all, lr=learning_rate)
-        for t in range(1000):
+        optimizer = torch.optim.Adam(self.weights_all, lr=self.learning_rate)
+
+        stop_flag = False
+        iter = 0
+        while iter < self.max_iter and not stop_flag:
+            # Training
             train_predictions = self.forward(train_patterns)
-            loss = self.loss(train_predictions, train_targets)
-            if t%100 == 0:
-                print(t, loss.item())
+            loss = (self.loss(train_predictions, train_targets)
+                    + self.reg_factor * self.reg_loss(self.weights_all, mode='l2'))
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
+            # Validation
             with torch.no_grad():
                 validation_predictions = self.forward(validation_patterns)
                 validation_loss = float(self.loss(validation_predictions, validation_targets).item())
                 self.validation_loss_record.append(validation_loss/len(validation_targets))
+                if iter > self.min_iter:
+                    if self._is_monotonically_increasing(self.validation_loss_record[-4:]):
+                        stop_flag = True
+
+            # Progress bar
+            if iter % int(self.max_iter/10) == 0:
+                print("Training progress: {}".format(iter/self.max_iter))
+                print("Iteration number {}. Average validation loss per sample: {:.2f}".format(
+                    iter, validation_loss/len(validation_targets)))
+
+            iter += 1
