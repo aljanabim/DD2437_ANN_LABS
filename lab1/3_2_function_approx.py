@@ -112,8 +112,9 @@ class NeuralNetwork():
             self.misses[i] = self.n_data - \
                 np.count_nonzero(self.result == self.labels)
 
-    def predict(self, data_point):
-        h = self._activation(np.dot(self.v, data_point))
+    def predict(self, data):
+        data = np.column_stack((data, np.ones(data.shape[0])))
+        h = self._activation(np.dot(self.v, data.T))
         y = np.dot(self.w, h)
         return y
 
@@ -151,9 +152,6 @@ def generate_gaussian(n_x, n_y, plot=True):
     zz = np.exp(-x*x*0.1) @ np.exp(-y*y*0.1).T - 0.5
     xx, yy = np.meshgrid(x, y)
 
-    print(xx)
-    print(yy)
-    print(zz)
     if plot:
         surface_plot(xx, yy, zz, title="Original Gaussian")
 
@@ -164,29 +162,115 @@ def generate_gaussian(n_x, n_y, plot=True):
     return patterns, targets
 
 
-def test_function_approximation():
+def mse_vs_n_hidden():
     n_x = 20
     n_y = 20
+    n_trials = 2
+    frac_train = 0.6
+
+    patterns, targets = generate_gaussian(n_x, n_y, plot=False)
+
+    data = np.column_stack((patterns, targets))
+    np.random.shuffle(data)
+
+    n_train = int(frac_train*len(targets))
+    validation_patterns = data[:, :2]
+    validation_targets = data[:, 2]
+    patterns = data[:n_train, :2]
+    targets = data[:n_train, 2]
+
+    n_hidden_list = list(range(1, 10, 1))
+    mse_avgs = []
+    mse_stds = []
+    for n_hidden in n_hidden_list:
+        mse_list = []
+        for trial in range(n_trials):
+            net = NeuralNetwork(method='batch', n_inputs=2,
+                                n_hidden=n_hidden, n_outputs=1)
+            net.fit(patterns, targets, n_epochs=1000)
+
+            preds = net.predict(validation_patterns)
+            mse = np.sum(np.square(validation_targets-preds)) / len(validation_targets)
+            mse_list.append(mse)
+        mse_avgs.append(np.mean(mse_list))
+        mse_stds.append(np.std(mse_list))
+
+    mse_sem = mse_stds / np.sqrt(n_trials)
+
+    # Plot mse by neurons
+    plt.errorbar(n_hidden_list, mse_avgs, mse_sem, capsize=2, label='Average MSE +- SEM')
+    plt.title('MSE as function of neurons in hidden layer')
+    plt.xlabel('Number of neurons')
+    plt.ylabel('Mean Squared Error')
+    plt.legend()
+    plt.show()
+
+def mse_vs_frac_train():
+    n_x = 20
+    n_y = 20
+    n_trials = 2
+    n_hidden = 10
+
+    patterns, targets = generate_gaussian(n_x, n_y, plot=False)
+
+    data = np.column_stack((patterns, targets))
+    np.random.shuffle(data)
+
+    frac_train_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    mse_avgs = []
+    mse_stds = []
+    validation_patterns = data[:, :2]
+    validation_targets = data[:, 2]
+    for frac_train in frac_train_list:
+        n_train = int(frac_train*len(targets))
+        patterns = data[:n_train, :2]
+        targets = data[:n_train, 2]
+
+        mse_list = []
+        for trial in range(n_trials):
+            net = NeuralNetwork(method='batch', n_inputs=2,
+                                n_hidden=n_hidden, n_outputs=1)
+
+            net.fit(patterns, targets, n_epochs=1000)
+            preds = net.predict(validation_patterns)
+            mse = np.sum(np.square(validation_targets-preds)) / len(validation_targets)
+            mse_list.append(mse)
+        mse_avgs.append(np.mean(mse_list))
+        mse_stds.append(np.std(mse_list))
+    mse_sem = mse_stds / np.sqrt(n_trials)
+
+    # Plot mse by neurons
+    plt.errorbar(frac_train_list, mse_avgs, mse_sem, capsize=2, label='Average MSE +- SEM')
+    plt.title('MSE as function of training fraction')
+    plt.xlabel('Number of neurons')
+    plt.ylabel('Mean Squared Error')
+    plt.legend()
+    plt.show()
+
+
+def function_approximation():
+    n_x = 20
+    n_y = 20
+    n_hidden = 10
+
     patterns, targets = generate_gaussian(n_x, n_y)
 
+    data = np.column_stack((patterns, targets))
+    np.random.shuffle(data)
 
     net = NeuralNetwork(method='batch', n_inputs=2,
-                        n_hidden=10, n_outputs=1)
+                        n_hidden=n_hidden, n_outputs=1)
 
-    print("Data:\n{}".format(patterns))
-    print("Labels:\n{}".format(targets))
-    net.fit(patterns, targets, n_epochs=10000)
+    net.fit(patterns, targets, n_epochs=1000)
+    preds = net.predict(patterns)
 
-
+    # Plot surface
     xx = np.reshape(patterns[:,0], (n_x, n_y))
     yy = np.reshape(patterns[:,1], (n_x, n_y))
-    zz_approx = np.reshape(net.y, (n_x, n_y))
-
+    zz_approx = np.reshape(preds, (n_x, n_y))
     surface_plot(xx, yy, zz_approx, title="Approximated Gaussian")
 
 
-
-
-
-
-test_function_approximation()
+mse_vs_n_hidden()
+mse_vs_frac_train()
+function_approximation()
