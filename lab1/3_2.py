@@ -58,11 +58,6 @@ class NeuralNetwork():
         h_in_deriv = self._activation_deriv((h_in))
         self.delta_j = np.multiply(delta_k_w.T, h_in_deriv)
 
-        # Stupid way using for loops
-        # for j in range(self.n_data):
-        #     h_in_deriv = self._activation_deriv((h_in[:, j]))
-        #     self.delta_j[:, j] = np.multiply(
-        #         np.dot(self.delta_k[:, j], self.w), h_in_deriv)
 
     def _weight_updating(self, index):
         self.w = self.w + self.learning_rate * \
@@ -71,10 +66,7 @@ class NeuralNetwork():
             np.dot(np.array([self.delta_j[:, index]]).T,
                    np.array([self.data[index, :]]))
 
-        # print(self.v)
-        # self.w = self.w + self.learning_rate * np.dot()
-
-    def fit(self, data, labels, n_epochs):
+    def fit(self, data, labels, n_epochs, validation=None):
         '''
         Expects data in the form
         data = [[x1,y1],
@@ -199,18 +191,50 @@ def plot_decision_boundry(data, res, predictor):
         y_out[i] = y_range[np.argmin(result[:, i])]
 
     plt.plot(x_out, y_out)
+    plt.xlabel(r'$x_1$')
+    plt.ylabel(r'$x_2$')
+    plt.title('Decision Boundry, #hidden nodes=5')
 
 
 def test_num_nodes():
-    test = [1, 5, 10, 15, 20, 30]
+    test = [1,5,10,15,25]#[1, 5, 10, 15, 20, 30]
     N = 100
+
+    
+    epochs = np.arange(101)
+    mse = np.zeros(101)
+    miss = np.zeros(101)
     for i in test:
-        plt.subplot(1,1,2)
-        plt.plot()
+        data = generate_data(N, plot=False, meanA=[2, 2.5], meanB=[
+            0, 0], sigmaA=0.8, sigmaB=0.5)
+        for j in range(200):
+            network = NeuralNetwork(method='batch', n_inputs=2,
+                                    n_hidden=i, n_outputs=1)
+            network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
+            temp_mse, temp_miss = network.metrics()
+            mse += temp_mse
+            miss += temp_miss
+        mse = mse/200
+        miss = miss/200
+        plt.subplot(1,2,1)
+        plt.plot(epochs, mse, label='# hidden nodes='+str(i))
+        plt.xlabel('Epochs')
+        plt.ylabel('MSE')
+        plt.title("Mean squared error")
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(epochs, miss, label='# hidden nodes='+str(i))
+        plt.xlabel('Epochs')
+        plt.ylabel('# of missclassifications')
+        plt.title("Missclassifications")
+        plt.legend()
+        
+    
+    plt.show()
 def test_network():
     N = 100
     network = NeuralNetwork(method='batch', n_inputs=2,
-                            n_hidden=3, n_outputs=1)
+                            n_hidden=5, n_outputs=1)
                             # n_hidden
 
     # data = generate_data(N, plot=True, meanA=[0, 0], meanB=[
@@ -225,8 +249,11 @@ def test_network():
     network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
     mse, miss_ratio = network.metrics()
     print(mse[-1], miss_ratio[-1])
-    plot_decision_boundry(data, 500, network.predict)
+    plot_decision_boundry(data, 1000, network.predict)
     plt.show()
 
+def test_cut_data():
+    pass
 test_network()
-# test_num_nodes()
+# test_num_nodes() # choose 5 nodes
+# test_cut_data()
