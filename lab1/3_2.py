@@ -7,13 +7,12 @@ plt.style.use('ggplot')
 
 
 class NeuralNetwork():
-    def __init__(self, method='batch', alpha=0.9,learning_rate=0.001, n_inputs=2, n_hidden=5, n_outputs=1):
+    def __init__(self, method='batch',learning_rate=0.01, n_inputs=2, n_hidden=5, n_outputs=1):
         self.n_inputs = n_inputs
         self.n_hidden = n_hidden
         self.n_outputs = n_outputs
         self.method = method
         self.learning_rate = learning_rate
-        self.alpha = alpha
         self._init_network()
 
     def _init_network(self):
@@ -25,13 +24,11 @@ class NeuralNetwork():
         mean_v = np.zeros(self.n_inputs+1)
         self.v = np.random.multivariate_normal(
             mean_v, cov_v, self.n_hidden)
-        self.v_momentum = np.zeros((self.n_hidden, self.n_inputs+1))
 
         cov_w = np.eye(self.n_hidden+1)
         mean_w = np.zeros(self.n_hidden+1)
         self.w = np.random.multivariate_normal(
             mean_w, cov_w, self.n_outputs)
-        self.w_momentum = np.zeros((self.n_outputs, self.n_hidden+1))
 
 
     def _add_bias(self):
@@ -207,18 +204,19 @@ def test_num_nodes():
     epochs = np.arange(101)
     mse = np.zeros(101)
     miss = np.zeros(101)
+    iters = 2
     for i in test:
         data = generate_data(N, plot=False, meanA=[2, 2.5], meanB=[
             0, 0], sigmaA=0.8, sigmaB=0.5)
-        for j in range(200):
+        for j in range(iters):
             network = NeuralNetwork(method='batch', n_inputs=2,
                                     n_hidden=i, n_outputs=1)
             network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
             temp_mse, temp_miss = network.metrics()
             mse += temp_mse
             miss += temp_miss
-        mse = mse/200
-        miss = miss/200
+        mse = mse/iters
+        miss = miss/iters
         plt.subplot(1,2,1)
         plt.plot(epochs, mse, label='# hidden nodes='+str(i))
         plt.xlabel('Epochs')
@@ -237,7 +235,7 @@ def test_num_nodes():
 def test_network():
     N = 100
     network = NeuralNetwork(method='batch', n_inputs=2,
-                            n_hidden=5, n_outputs=1)
+                            n_hidden=1, n_outputs=1)
                             # n_hidden
 
     # data = generate_data(N, plot=True, meanA=[0, 0], meanB=[
