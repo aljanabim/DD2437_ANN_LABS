@@ -7,12 +7,13 @@ plt.style.use('ggplot')
 
 
 class NeuralNetwork():
-    def __init__(self, method='batch', learning_rate=0.001, n_inputs=2, n_hidden=5, n_outputs=1):
+    def __init__(self, method='batch', alpha=0.5,learning_rate=0.00001, n_inputs=2, n_hidden=5, n_outputs=1):
         self.n_inputs = n_inputs
         self.n_hidden = n_hidden
         self.n_outputs = n_outputs
         self.method = method
         self.learning_rate = learning_rate
+        self.alpha = alpha
         self._init_network()
 
     def _init_network(self):
@@ -24,11 +25,14 @@ class NeuralNetwork():
         mean_v = np.zeros(self.n_inputs+1)
         self.v = np.random.multivariate_normal(
             mean_v, cov_v, self.n_hidden)
+        self.v_momentum = np.zeros((self.n_hidden, self.n_inputs+1))
 
         cov_w = np.eye(self.n_hidden+1)
         mean_w = np.zeros(self.n_hidden+1)
         self.w = np.random.multivariate_normal(
             mean_w, cov_w, self.n_outputs)
+        self.w_momentum = np.zeros((self.n_outputs, self.n_hidden+1))
+
 
     def _add_bias(self):
         self.data = np.column_stack((self.data, np.ones(self.data.shape[0])))
@@ -58,11 +62,14 @@ class NeuralNetwork():
         # print(h_in_deriv.shape, self.delta_j.shape)
 
     def _weight_updating(self, index):
-        self.w = self.w + self.learning_rate * \
-            self.delta_k[:, index] * self.h[:, index]
-        self.v = self.v + self.learning_rate * \
-            np.dot(np.array([self.delta_j[0:-1, index]]).T,
-                   np.array([self.data[index, :]]))
+        self.w_momentum = self.alpha * self.w_momentum - \
+            (1-self.alpha)*self.delta_k[:, index] * self.h[:, index]
+        self.w = self.w + self.learning_rate * self.w_momentum
+        
+        self.v_momentum = self.alpha * self.v_momentum - (1-self.alpha)*np.dot(np.array([self.delta_j[0:-1, index]]).T,
+                                                                               np.array([self.data[index, :]]))
+        self.v = self.v + self.learning_rate * self.v_momentum
+            
 
     def fit(self, data, labels, n_epochs):
         '''
@@ -125,6 +132,52 @@ def classifier(val):
         return -1
 
 
+def cut_data(data, cut_a, cut_b):
+    class_a = data[data[:, 2] == 1]
+    class_b = data[data[:, 2] == -1]
+    np.random.shuffle(class_a)
+    np.random.shuffle(class_b)
+    n_a = int(len(class_a)*(1-cut_a))
+    n_b = int(len(class_b)*(1-cut_b))
+
+    train_a = class_a[:n_a]
+    train_b = class_b[:n_b]
+    valid_a = class_a[n_a:]
+    valid_b = class_b[n_b:]
+
+    train_set = np.row_stack([train_a, train_b])
+    np.random.shuffle(train_set)
+    valid_set = np.row_stack([valid_a, valid_b])
+    np.random.shuffle(valid_set)
+
+    return train_set, valid_set
+
+
+def cut_asymmetric(data):
+    class_a = data[data[:, 2] == 1]
+    class_b = data[data[:, 2] == -1]
+
+    class_a_upper = class_a[class_a[:, 0] > 0]
+    class_a_lower = class_a[class_a[:, 0] < 0]
+
+    n_a_lower = int(len(class_a_lower)*0.2)
+    n_a_upper = int(len(class_a_upper)*0.8)
+
+    class_a_upper_train = class_a_upper[:n_a_upper]
+    class_a_upper_valid = class_a_upper[n_a_upper:]
+    class_a_lower_train = class_a_lower[:n_a_lower]
+    class_a_lower_valid = class_a_lower[n_a_lower:]
+    valid_set = np.row_stack([class_a_upper_valid, class_a_lower_valid])
+
+    class_a_train = np.row_stack([class_a_upper_train, class_a_lower_train])
+    train_set = np.row_stack([class_a_train, class_b])
+
+    np.random.shuffle(train_set)
+    np.random.shuffle(valid_set)
+
+    return train_set, valid_set
+
+
 def plot_decision_boundry(data, res, predictor):
     x_min = np.min(data[:, 0])-0.5
     x_max = np.max(data[:, 0])+0.5
@@ -143,22 +196,69 @@ def plot_decision_boundry(data, res, predictor):
         y_out[i] = y_range[np.argmin(result[:, i])]
 
     plt.plot(x_out, y_out)
+    plt.xlabel(r'$x_1$')
+    plt.ylabel(r'$x_2$')
+    plt.title('Decision Boundry, #hidden nodes=5')
 
 
-N = 100
-network = NeuralNetwork(method='batch', n_inputs=2,
-                        n_hidden=1, n_outputs=1)
-# n_hidden = 30
+def test_num_nodes():
+    test = [1,5,10,15,25]#[1, 5, 10, 15, 20, 30]
+    N = 100
 
-# data = generate_data(N, plot=True, meanA=[0, 0], meanB=[
-#     10, 10], sigmaA=2, sigmaB=2)
-data = generate_data(N, plot=True, meanA=[2, 1.5], meanB=[
-    0, -1], sigmaA=0.2, sigmaB=0.3)
-# data = generate_data(N, plot=True, meanA=[1, 0.5], meanB=[
-#     0, -1], sigmaA=0.2, sigmaB=0.3)
+    
+    epochs = np.arange(101)
+    mse = np.zeros(101)
+    miss = np.zeros(101)
+    for i in test:
+        data = generate_data(N, plot=False, meanA=[2, 2.5], meanB=[
+            0, 0], sigmaA=0.8, sigmaB=0.5)
+        for j in range(200):
+            network = NeuralNetwork(method='batch', n_inputs=2,
+                                    n_hidden=i, n_outputs=1)
+            network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
+            temp_mse, temp_miss = network.metrics()
+            mse += temp_mse
+            miss += temp_miss
+        mse = mse/200
+        miss = miss/200
+        plt.subplot(1,2,1)
+        plt.plot(epochs, mse, label='# hidden nodes='+str(i))
+        plt.xlabel('Epochs')
+        plt.ylabel('MSE')
+        plt.title("Mean squared error")
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(epochs, miss, label='# hidden nodes='+str(i))
+        plt.xlabel('Epochs')
+        plt.ylabel('# of missclassifications')
+        plt.title("Missclassifications")
+        plt.legend()
+        
+    
+    plt.show()
+def test_network():
+    N = 100
+    network = NeuralNetwork(method='batch', n_inputs=2,
+                            n_hidden=5, n_outputs=1)
+                            # n_hidden
 
-network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
-mse, miss_ratio = network.metrics()
-print(mse[-1], miss_ratio[-1])
-plot_decision_boundry(data, 500, network.predict)
-plt.show()
+    # data = generate_data(N, plot=True, meanA=[0, 0], meanB=[
+    #     10, 10], sigmaA=2, sigmaB=2)
+    # data = generate_data(N, plot=True, meanA=[2, 1.5], meanB=[
+    # 0, -1], sigmaA=0.2, sigmaB=0.3)
+
+    np.random.seed(2)
+    data = generate_data(N, plot=True, meanA=[2, 2.5], meanB=[
+        0, 0], sigmaA=0.8, sigmaB=0.5)
+    
+    network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
+    mse, miss_ratio = network.metrics()
+    print(mse[-1], miss_ratio[-1])
+    plot_decision_boundry(data, 1000, network.predict)
+    plt.show()
+
+def test_cut_data():
+    pass
+test_network()
+# test_num_nodes() # choose 5 nodes
+# test_cut_data()
