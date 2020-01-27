@@ -2,7 +2,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from generate_data import generate_data
+from generate_data import generate_data, generate_data_2
 plt.style.use('ggplot')
 
 
@@ -66,7 +66,7 @@ class NeuralNetwork():
             np.dot(np.array([self.delta_j[0:-1, index]]).T,
                    np.array([self.data[index, :]]))
 
-    def fit(self, data, labels, n_epochs):
+    def fit(self, data, labels, n_epochs, validation=None):
         '''
         Expects data in the form
         data = [[x1,y1],
@@ -82,6 +82,8 @@ class NeuralNetwork():
         self.miss_ratio = np.zeros(n_epochs+1)
         self.misses = np.zeros(n_epochs+1)
         self._add_bias()
+        if validation:
+            print("Tes")
 
         for i in range(n_epochs):
             if self.method == 'sequential':
@@ -100,6 +102,7 @@ class NeuralNetwork():
                 np.square(self.labels-self.y[0, :]))/self.n_data
             self.misses[i] = self.n_data - \
                 np.count_nonzero(self.result == self.labels)
+            
 
     def predict(self, data_point):
         data_point = np.concatenate((data_point, np.ones(1)))
@@ -193,7 +196,7 @@ def plot_decision_boundry(data, res, predictor):
     plt.plot(x_out, y_out)
     plt.xlabel(r'$x_1$')
     plt.ylabel(r'$x_2$')
-    plt.title('Decision Boundry, #hidden nodes=5')
+    
 
 
 def test_num_nodes():
@@ -204,10 +207,10 @@ def test_num_nodes():
     epochs = np.arange(101)
     mse = np.zeros(101)
     miss = np.zeros(101)
-    iters = 2
+    iters = 100
     for i in test:
         data = generate_data(N, plot=False, meanA=[2, 2.5], meanB=[
-            0, 0], sigmaA=0.8, sigmaB=0.5)
+            0, 0], sigmaA=0.8, sigmaB=0.6)
         for j in range(iters):
             network = NeuralNetwork(method='batch', n_inputs=2,
                                     n_hidden=i, n_outputs=1)
@@ -234,27 +237,41 @@ def test_num_nodes():
     plt.show()
 def test_network():
     N = 100
+    n_hidden = 5
     network = NeuralNetwork(method='batch', n_inputs=2,
-                            n_hidden=1, n_outputs=1)
+                            n_hidden=n_hidden, n_outputs=1)
                             # n_hidden
-
-    # data = generate_data(N, plot=True, meanA=[0, 0], meanB=[
-    #     10, 10], sigmaA=2, sigmaB=2)
-    # data = generate_data(N, plot=True, meanA=[2, 1.5], meanB=[
-    # 0, -1], sigmaA=0.2, sigmaB=0.3)
 
     np.random.seed(2)
     data = generate_data(N, plot=True, meanA=[2, 2.5], meanB=[
-        0, 0], sigmaA=0.8, sigmaB=0.5)
+        0, 0], sigmaA=0.8, sigmaB=0.6)
     
     network.fit(data[:, 0:2], data[:, 2], n_epochs=100)
     mse, miss_ratio = network.metrics()
     print(mse[-1], miss_ratio[-1])
     plot_decision_boundry(data, 1000, network.predict)
+    plt.title('Decision Boundry, #hidden nodes='+str(n_hidden))
     plt.show()
 
 def test_cut_data():
-    pass
-test_network()
+    N = 100
+    data = generate_data_2(N, plot=False, meanA=[1, 0.6], meanB=[
+        0, -0.1], sigmaA=0.2, sigmaB=0.25, special=True)
+    # situation 1 0.25 from each
+    train_set1, valid_set1 = cut_data(data, 0.25, 0.25)
+    # situation 2 0.5 from each A
+    train_set2, valid_set2 = cut_data(data, 0.5, 0)
+    # situation 3 0.5 from each B
+    train_set3, valid_set3 = cut_data(data, 0, 0.5)
+    # situation 4 0.5 from each A
+    train_set4, valid_set4 = cut_asymmetric(data)
+
+    n_hidden = 5
+    network = NeuralNetwork(method='batch', n_hidden=n_hidden)
+    network.fit(train_set1[:,0:2],train_set1[:,2],100, valid_set1[:,0:2],valid_set1[:,2])
+
+    plt.show()
+    # plt.show()
+# test_network()
 # test_num_nodes() # choose 5 nodes
-# test_cut_data()
+test_cut_data()
