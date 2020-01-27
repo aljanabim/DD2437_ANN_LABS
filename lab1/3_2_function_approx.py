@@ -165,7 +165,7 @@ def generate_gaussian(n_x, n_y, plot=True):
 def mse_vs_n_hidden():
     n_x = 20
     n_y = 20
-    n_trials = 2
+    n_trials = 10
     frac_train = 0.6
 
     patterns, targets = generate_gaussian(n_x, n_y, plot=False)
@@ -179,7 +179,7 @@ def mse_vs_n_hidden():
     patterns = data[:n_train, :2]
     targets = data[:n_train, 2]
 
-    n_hidden_list = list(range(1, 10, 1))
+    n_hidden_list = list(range(1, 26, 1))
     mse_avgs = []
     mse_stds = []
     for n_hidden in n_hidden_list:
@@ -208,10 +208,11 @@ def mse_vs_n_hidden():
 def mse_vs_frac_train():
     n_x = 20
     n_y = 20
-    n_trials = 2
-    n_hidden = 10
+    n_trials = 10
+    n_hidden = 14
 
     patterns, targets = generate_gaussian(n_x, n_y, plot=False)
+    n_total_samples = len(targets)
 
     data = np.column_stack((patterns, targets))
     np.random.shuffle(data)
@@ -222,7 +223,8 @@ def mse_vs_frac_train():
     validation_patterns = data[:, :2]
     validation_targets = data[:, 2]
     for frac_train in frac_train_list:
-        n_train = int(frac_train*len(targets))
+        n_train = int(frac_train*n_total_samples)
+        print(n_train)
         patterns = data[:n_train, :2]
         targets = data[:n_train, 2]
 
@@ -230,7 +232,6 @@ def mse_vs_frac_train():
         for trial in range(n_trials):
             net = NeuralNetwork(method='batch', n_inputs=2,
                                 n_hidden=n_hidden, n_outputs=1)
-
             net.fit(patterns, targets, n_epochs=1000)
             preds = net.predict(validation_patterns)
             mse = np.sum(np.square(validation_targets-preds)) / len(validation_targets)
@@ -271,6 +272,6 @@ def function_approximation():
     surface_plot(xx, yy, zz_approx, title="Approximated Gaussian")
 
 
-mse_vs_n_hidden()
+# mse_vs_n_hidden()
 mse_vs_frac_train()
-function_approximation()
+# function_approximation()
