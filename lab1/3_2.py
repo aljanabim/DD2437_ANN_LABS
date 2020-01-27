@@ -66,7 +66,7 @@ class NeuralNetwork():
             np.dot(np.array([self.delta_j[0:-1, index]]).T,
                    np.array([self.data[index, :]]))
 
-    def fit(self, data, labels, n_epochs, validation=None):
+    def fit(self, data, labels, n_epochs, validate=False,data_valid=None, labels_valid=None):
         '''
         Expects data in the form
         data = [[x1,y1],
@@ -82,8 +82,13 @@ class NeuralNetwork():
         self.miss_ratio = np.zeros(n_epochs+1)
         self.misses = np.zeros(n_epochs+1)
         self._add_bias()
-        if validation:
-            print("Tes")
+        self.validate = False
+        if validate:
+            self.validate = True
+            self.labels_valid = labels_valid
+            self.n_data_valid = len(self.labels_valid)
+            self.mse_valid = np.zeros(n_epochs+1)
+            self.misses_valid = np.zeros(n_epochs+1)
 
         for i in range(n_epochs):
             if self.method == 'sequential':
@@ -99,9 +104,17 @@ class NeuralNetwork():
                     self._weight_updating(index)
             self.result = list(map(classifier, self.y[0, :]))
             self.mse[i] = np.sum(
-                np.square(self.labels-self.y[0, :]))/self.n_data
-            self.misses[i] = self.n_data - \
-                np.count_nonzero(self.result == self.labels)
+                np.square(self.labels-self.result))/self.n_data
+            self.misses[i] = (self.n_data - \
+                              np.count_nonzero(self.result == self.labels))/self.n_data
+
+            if self.validate:
+                self.y_valid = list(map(self.predict, data_valid))
+                self.result_valid = list(map(classifier, self.y_valid))
+                self.mse_valid[i] = np.sum(
+                    np.square(self.labels_valid-self.result_valid))/self.n_data_valid
+                self.misses_valid[i] = (self.n_data_valid - \
+                    np.count_nonzero(self.result_valid == self.labels_valid))/self.n_data_valid
             
 
     def predict(self, data_point):
@@ -114,9 +127,21 @@ class NeuralNetwork():
     def metrics(self):
         self._forward_pass()
         self.mse[-1] = np.sum(
-            np.square(self.labels-self.y[0, :]))/self.n_data
-        self.misses[-1] = self.n_data - \
-            np.count_nonzero(self.result == self.labels)
+            np.square(self.labels-self.result))/self.n_data
+        self.misses[-1] = (self.n_data - np.count_nonzero(self.result ==
+                                                          self.labels))/self.n_data
+        if self.validate:
+            self._forward_pass()
+            self.mse_valid[-1] = np.sum(
+                np.square(self.labels_valid-self.result_valid))/self.n_data_valid
+            self.misses_valid[-1] = (self.n_data_valid - \
+                                     np.count_nonzero(self.result_valid == self.labels_valid))/self.n_data_valid
+        
+            # print('Misses', self.misses)
+            # print('Misses valid', self.misses_valid)
+
+            return self.mse, self.misses, self.mse_valid, self.misses_valid
+
         return self.mse, self.misses
 
         # for i in range(self.n_data):
@@ -196,6 +221,7 @@ def plot_decision_boundry(data, res, predictor):
     plt.plot(x_out, y_out)
     plt.xlabel(r'$x_1$')
     plt.ylabel(r'$x_2$')
+    plt.legend()
     
 
 
@@ -253,10 +279,16 @@ def test_network():
     plt.title('Decision Boundry, #hidden nodes='+str(n_hidden))
     plt.show()
 
-def test_cut_data():
+def test_cut_data_decision():
     N = 100
-    data = generate_data_2(N, plot=False, meanA=[1, 0.6], meanB=[
-        0, -0.1], sigmaA=0.2, sigmaB=0.25, special=True)
+    n_hidden = 10
+    network = NeuralNetwork(method='batch', n_inputs=2,
+                            n_hidden=n_hidden, n_outputs=1)
+                            # n_hidden
+
+    # np.random.seed(2)
+    data = generate_data_2(N, plot=True, meanA=[1, 0.6], meanB=[
+            0, -0.1], sigmaA=0.2, sigmaB=0.25, special=True)
     # situation 1 0.25 from each
     train_set1, valid_set1 = cut_data(data, 0.25, 0.25)
     # situation 2 0.5 from each A
@@ -265,13 +297,83 @@ def test_cut_data():
     train_set3, valid_set3 = cut_data(data, 0, 0.5)
     # situation 4 0.5 from each A
     train_set4, valid_set4 = cut_asymmetric(data)
+    # print(train_set1.shape, valid_set1.shape)
+    
+    network.fit(train_set1[:, 0:2], train_set1[:, 2], 100,
+                True, valid_set1[:, 0:2], valid_set1[:, 2])
+    mse, misses, mse_valid, misses_valid = network.metrics()
+    print('MSE',mse[-1], 'MISSES',misses[-1], 'Mse valid',mse_valid[-1], 'Misses valid',misses_valid[-1])
 
-    n_hidden = 5
-    network = NeuralNetwork(method='batch', n_hidden=n_hidden)
-    network.fit(train_set1[:,0:2],train_set1[:,2],100, valid_set1[:,0:2],valid_set1[:,2])
+    plt.scatter(valid_set1[:, 0], valid_set1[:, 1], label="Cutout")
+    plot_decision_boundry(data, 500, network.predict)
+    # plt.legend()
+    plt.title('Decision Boundry, #hidden nodes='+str(n_hidden))
+    plt.show()
+
+def test_cut_data():
+    N = 100
+    
+    # test = [1, 5, 10, 15, 25]  # [1, 5, 10, 15, 20, 30]
+    test = [1, 5, 10, 15, 25]
+    N = 100
+    eps = 100
+    epochs = np.arange(eps+1)
+    mse = np.zeros(eps+1)
+    misses = np.zeros(eps+1)
+    mse_valid = np.zeros(eps+1)
+    misses_valid = np.zeros(eps+1)
+
+    iters = 50
+    for i, n_hidden in enumerate(test):
+        data = generate_data_2(N, plot=False, meanA=[1, 0.6], meanB=[
+            0, -0.1], sigmaA=0.2, sigmaB=0.25, special=True)
+        # if i ==0:plt.show()
+        # situation 1 0.25 from each
+        train_set1, valid_set1 = cut_data(data, 0.25, 0.25)
+        # situation 2 0.5 from each A
+        train_set2, valid_set2 = cut_data(data, 0.5, 0)
+        # situation 3 0.5 from each B
+        train_set3, valid_set3 = cut_data(data, 0, 0.5)
+        # situation 4 0.5 from each A
+        train_set4, valid_set4 = cut_asymmetric(data)
+
+        
+        for j in range(iters):
+            network = NeuralNetwork(method='sequential', n_hidden=n_hidden)
+            network.fit(train_set1[:, 0:2], train_set1[:, 2], 100, True, valid_set1[:, 0:2], valid_set1[:, 2])
+            temp_mse, temp_misses, temp_mse_valid, temp_misses_valid = network.metrics()
+            mse += temp_mse
+            misses += temp_misses
+            mse_valid += temp_mse_valid
+            misses_valid += temp_misses_valid
+        mse = mse/iters
+        misses = misses/iters
+        mse_valid = mse_valid/iters
+        misses_valid = misses_valid/iters
+
+        plt.subplot(2, 5, i+1)
+        plt.plot(epochs, mse, label='Training')
+        plt.plot(epochs, mse_valid,
+                          label='Validation')
+        # plt.xlabel('Epochs')
+        if i == 0:
+            plt.ylabel('MSE')
+        plt.title("#hidden nodes="+str(n_hidden))
+        plt.legend()
+        
+        plt.subplot(2, 5, i+6)
+        plt.plot(epochs, misses, label='Training')
+        plt.plot(epochs, misses_valid,
+                 label='Validation')
+        plt.xlabel('Epochs')
+        if i ==0: 
+            plt.ylabel('Miss ratio')
+        # plt.title("#hidden nodes="+str(n_hidden))
+        plt.legend()
 
     plt.show()
     # plt.show()
 # test_network()
 # test_num_nodes() # choose 5 nodes
 test_cut_data()
+# test_cut_data_decision()

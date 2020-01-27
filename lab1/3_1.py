@@ -552,8 +552,8 @@ def subsampling():
     np.random.seed(3)
 
     n_trials = 100
-    cut_a = 0.5
-    cut_b = 0.0
+    cut_a = 0.0
+    cut_b = 0.50
     n_epochs = 2000
     learning_rate = 0.001
     n_data = 100
@@ -561,7 +561,7 @@ def subsampling():
     n_test_samples = n_data - n_train_samples
 
     data = generate_data(n_data, meanA = [1.0, 0.3], meanB = [0.0, -0.1], sigmaA=0.2, sigmaB=0.3, special=True)
-
+    original_data = data.copy()
     delta_accuracy_record = []
     perceptron_accuracy_record = []
     for trial in range(n_trials):
@@ -584,18 +584,18 @@ def subsampling():
         delta_accuracy_record.append(delta_accuracy)
 
     print("Delta Accuracy\nMean={}, Std={}".format(
-        np.mean(delta_accuracy_record) ,np.std(delta_accuracy_record)))
+        np.mean(delta_accuracy_record), np.std(delta_accuracy_record)))
 
 
     plot_decision_boundary(data_train,
                            delta_perceptron.weights,
-                           title="Perceptron and delta learning on non-linearly separable set",
-                           labels=["Delta learning", "Perceptron learning"])
+                           title="Decision boundary and training set",
+                           labels=["Delta learning"])
 
     plot_decision_boundary(data_valid,
                            delta_perceptron.weights,
-                           title="Perceptron and delta learning on non-linearly separable set",
-                           labels=["Delta learning", "Perceptron learning"])
+                           title="Decision boundary and validation set",
+                           labels=["Delta learning"])
 
     plot_n_errors(delta_perceptron.n_errors,
                   labels=["Delta learning", "Perceptron learning"])
