@@ -187,7 +187,7 @@ def mse_vs_n_hidden():
         for trial in range(n_trials):
             net = NeuralNetwork(method='batch', n_inputs=2,
                                 n_hidden=n_hidden, n_outputs=1)
-            net.fit(patterns, targets, n_epochs=1000)
+            net.fit(patterns, targets, n_epochs=10000)
 
             preds = net.predict(validation_patterns)
             mse = np.sum(np.square(validation_targets-preds)) / len(validation_targets)
@@ -280,6 +280,6 @@ def function_approximation():
     surface_plot(xx, yy, zz_approx, title="Approximated Gaussian - {} hidden neurons".format(n_hidden))
 
 
-# mse_vs_n_hidden()
+mse_vs_n_hidden()
 # mse_vs_frac_train()
-function_approximation()
+# function_approximation()
