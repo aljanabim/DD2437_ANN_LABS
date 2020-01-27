@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import sys
-from sklearn.metrics import mean_squared_error
 
 from sklearn_net import SklearnNet
 from fully_connected_net import FullyConnectedNet
