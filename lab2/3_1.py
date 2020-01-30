@@ -25,7 +25,14 @@ class RBFNetwork():
 
             print(w)
 
-    def predict(self):
+
+
+
+
+def plot_prediction():
+    x = np.linspace(0, 2*np.pi, 100)
+    pass
+
 
 
 def sin2(x):
@@ -55,5 +62,9 @@ square_test = list(map(square, generate_input(0.05)))
 
 network = RBFNetwork(n_inputs=1, n_rbf=40, n_outputs=1)
 network.fit(sin2_train, sin2_train)
+
+
+
+
 # network.RBF(0.5, 0.45)
 # print(network.w)
