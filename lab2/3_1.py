@@ -56,6 +56,38 @@ def generate_input(start):
     return patterns
 
 
+def gen_sin_data():
+    x_train = generate_input(0)
+    x_test = generate_input(0.05)
+    sin2_train = [sin2(val) for val in generate_input(0)]
+    sin2_test = [sin2(val) for val in generate_input(0.05)]
+    return sin2_train, sin2_test
+
+
+def gen_square_data():
+    square_train = [square(val) for val in generate_input(0)]
+    square_test = [square(val) for val in generate_input(0.05)]
+    return square_train, square_test
+
+
+def plot_prediction():
+    network = RBFNetwork(n_inputs=1, n_rbf=50, n_outputs=1)
+    sin2_train, sin2_test = gen_sin_data()
+    square_train, square_test = gen_square_data()
+    network.fit(square_train, square_test)
+
+    x = np.linspace(0, 2*np.pi, 100)
+    y = np.zeros(x.shape)
+    for i, x_i in enumerate(x):
+        y[i] = network.predict(x_i)
+
+    plt.plot(x, y)
+    plt.show()
+
+
+plot_prediction()
+
+
 x_train = generate_input(0)
 x_test = generate_input(0.05)
 sin2_train = list(map(sin2, generate_input(0)))
