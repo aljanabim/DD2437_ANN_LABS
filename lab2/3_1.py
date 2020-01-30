@@ -21,13 +21,14 @@ class RBFNetwork():
         self.data = np.array([data]).T
         if method == 'batch':
             phi = self.RBF(self.data, self.rbf_centers)
-            w = np.dot(np.dot(np.linalg.pinv(np.dot(phi.T, phi)), phi.T), f)
+            self.w = np.dot(
+                np.dot(np.linalg.pinv(np.dot(phi.T, phi)), phi.T), f)
 
             # print(w)
 
     def predict(self, x):
         x = np.array([x]).T
-        return np.dot(self.w, self.RBF(x, self.rbf_centers).T)[0]
+        return np.dot(self.w, self.RBF(x, self.rbf_centers).T)
 
 
 def plot_prediction():
@@ -64,7 +65,7 @@ sin2_test = list(map(sin2, generate_input(0.05)))
 square_train = list(map(square, generate_input(0)))
 square_test = list(map(square, generate_input(0.05)))
 
-network = RBFNetwork(n_inputs=1, n_rbf=4, n_outputs=1)
+network = RBFNetwork(n_inputs=1, n_rbf=50, n_outputs=1)
 network.fit(sin2_train, sin2_train)
 print(network.predict([0.5, 0]))
 print(sin2(np.array([0.5, 0])))
