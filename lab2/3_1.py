@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 
 VAR = 0.1
 
+np.random.seed(3)
 
 class RBFNetwork():
     def __init__(self, n_inputs, n_rbf, n_outputs, learning_rate=0.1, min_val=0.05, max_val=2*np.pi):
@@ -52,55 +53,41 @@ def square(x):
         return -1
 
 
-def generate_input(start):
-    patterns = np.arange(start, 2*np.pi, 0.1)
+def generate_input(start, n_points=10):
+    patterns = np.linspace(start, 2*np.pi, n_points)
     np.random.shuffle(patterns)
     return patterns
 
 
-def gen_sin_data():
-    x_train = generate_input(0)
-    x_test = generate_input(0.05)
-    sin2_train = [sin2(val) for val in generate_input(0)]
-    sin2_test = [sin2(val) for val in generate_input(0.05)]
-    return sin2_train, sin2_test
+def gen_func_data(n_train, n_test, func):
+    patterns = np.linspace(0, 2*np.pi, n_train+n_test)
+    targets = np.array([func(x) for x in patterns])
 
+    data = np.column_stack((patterns, targets))
+    np.random.shuffle(data)
+    train_data = data[:n_train]
+    test_data = data[n_train:]
 
-def gen_square_data():
-    square_train = [square(val) for val in generate_input(0)]
-    square_test = [square(val) for val in generate_input(0.05)]
-    return square_train, square_test
+    train_patterns = train_data[:,0]
+    train_targets = train_data[:,1]
+
+    test_patterns = test_data[:,0]
+    test_targets = test_data[:,1]
+
+    return train_patterns, train_targets, test_patterns, test_targets
 
 
 def plot_prediction():
-    network = RBFNetwork(n_inputs=1, n_rbf=50, n_outputs=1)
-    sin2_train, sin2_test = gen_sin_data()
-    square_train, square_test = gen_square_data()
-    network.fit(square_train, square_test)
+    n_train = 64
+    n_test = 63
 
-    x = np.linspace(0, 2*np.pi, 100)
-    y = np.zeros(x.shape)
-    for i, x_i in enumerate(x):
-        y[i] = network.predict(x_i)
+    network = RBFNetwork(n_inputs=1, n_rbf=100, n_outputs=1)
+    train_patterns, train_targets, test_patterns, test_targets = gen_func_data(n_train, n_test, sin2)
 
-    plt.plot(x, y)
+    network.fit(train_patterns, train_targets)
+    train_preds = network.predict(train_patterns)
+    plt.plot(train_patterns, train_preds, 'o')
     plt.show()
 
 
 plot_prediction()
-
-
-x_train = generate_input(0)
-x_test = generate_input(0.05)
-sin2_train = list(map(sin2, generate_input(0)))
-sin2_test = list(map(sin2, generate_input(0.05)))
-
-square_train = list(map(square, generate_input(0)))
-square_test = list(map(square, generate_input(0.05)))
-
-network = RBFNetwork(n_inputs=1, n_rbf=50, n_outputs=1)
-network.fit(sin2_train, sin2_train)
-print(network.predict([0.5, 0]))
-print(sin2(np.array([0.5, 0])))
-# network.RBF(0.5, 0.45)
-# print(network.w)
