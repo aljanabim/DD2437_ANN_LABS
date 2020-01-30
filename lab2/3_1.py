@@ -23,16 +23,11 @@ class RBFNetwork():
             phi = self.RBF(self.data, self.rbf_centers)
             w = np.dot(np.dot(np.linalg.pinv(np.dot(phi.T, phi)), phi.T), f)
 
-            print(w)
+            # print(w)
 
     def predict(self, x):
         x = np.array([x]).T
-        # print(self.w.shape, x.shape, self.rbf_centers.shape)
-        # print()
-        # print(self.RBF(x, self.rbf_centers).T.shape)
-        return np.dot(self.w, self.RBF(x, self.rbf_centers).T)
-
-
+        return np.dot(self.w, self.RBF(x, self.rbf_centers).T)[0]
 
 
 def plot_prediction():
@@ -42,11 +37,6 @@ def plot_prediction():
     y = np.zeros(x.shape)
     for i, x_i in enumerate(x):
         y[i] = network.predict(x_i)
-        
-
-
-
-
 
 
 def sin2(x):
@@ -76,6 +66,7 @@ square_test = list(map(square, generate_input(0.05)))
 
 network = RBFNetwork(n_inputs=1, n_rbf=4, n_outputs=1)
 network.fit(sin2_train, sin2_train)
-network.predict([0.5, 0.7])
+print(network.predict([0.5, 0]))
+print(sin2(np.array([0.5, 0])))
 # network.RBF(0.5, 0.45)
 # print(network.w)
