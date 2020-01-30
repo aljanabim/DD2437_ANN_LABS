@@ -51,17 +51,6 @@ def square(x):
         return -1
 
 
-<<<<<<< HEAD
-def generate_input(start, n_points=10):
-    patterns = np.linspace(start, 2*np.pi, n_points)
-    np.random.shuffle(patterns)
-    return patterns
-
-
-def gen_func_data(n_train, n_test, func):
-    patterns = np.linspace(0, 2*np.pi, n_train+n_test)
-    targets = np.array([func(x) for x in patterns])
-=======
 def generate_input(start, end=2*np.pi):
     patterns = np.arange(start, end, 0.1)
     # np.random.shuffle(patterns)
@@ -72,7 +61,6 @@ def gen_sin_data():
     sin2_train = [sin2(val) for val in generate_input(0)]
     sin2_test = [sin2(val) for val in generate_input(0.05)]
     return sin2_train, sin2_test
->>>>>>> ac6807c0d69b524f2a726cf5dcbb94a02a3698ae
 
     data = np.column_stack((patterns, targets))
     np.random.shuffle(data)
