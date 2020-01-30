@@ -373,7 +373,7 @@ def test_cut_data():
 
     plt.show()
     # plt.show()
-# test_network()
+test_network()
 # test_num_nodes() # choose 5 nodes
-test_cut_data()
+# test_cut_data()
 # test_cut_data_decision()
