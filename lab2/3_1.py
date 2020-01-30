@@ -2,7 +2,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-VAR = 0.1
+VAR = 1
 
 np.random.seed(3)
 
@@ -25,8 +25,6 @@ class RBFNetwork():
             self.w = np.dot(
                 np.dot(np.linalg.pinv(np.dot(phi.T, phi)), phi.T), f)
 
-            # print(w)
-
     def predict(self, x):
         x = np.array([x]).T
         return np.dot(self.w, self.RBF(x, self.rbf_centers).T)
@@ -37,9 +35,9 @@ def plot_prediction():
 
     x = np.linspace(0, 2*np.pi, 100)
     y = np.zeros(x.shape)
+    y_target = list(map(sin2, x))
     for i, x_i in enumerate(x):
         y[i] = network.predict(x_i)
-        return np.dot(self.w, self.RBF(x, self.rbf_centers))
 
 
 def sin2(x):
@@ -91,3 +89,22 @@ def plot_prediction():
 
 
 plot_prediction()
+<<<<<<< HEAD
+=======
+
+
+x_train = generate_input(0)
+x_test = generate_input(0.05)
+sin2_train = list(map(sin2, generate_input(0)))
+sin2_test = list(map(sin2, generate_input(0.05)))
+
+square_train = list(map(square, generate_input(0)))
+square_test = list(map(square, generate_input(0.05)))
+
+network = RBFNetwork(n_inputs=1, n_rbf=63, n_outputs=1)
+network.fit(sin2_train, sin2_train)
+print(network.predict([0.5, 0]))
+print(sin2(np.array([0.5, 0])))
+# network.RBF(0.5, 0.45)
+# print(network.w)
+>>>>>>> 9bc39c6292520f816afb9124526702169c017220
