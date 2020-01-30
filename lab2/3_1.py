@@ -50,15 +50,13 @@ def square(x):
         return -1
 
 
-def generate_input(start):
-    patterns = np.arange(start, 2*np.pi, 0.1)
-    np.random.shuffle(patterns)
+def generate_input(start, end=2*np.pi):
+    patterns = np.arange(start, end, 0.1)
+    # np.random.shuffle(patterns)
     return patterns
 
 
 def gen_sin_data():
-    x_train = generate_input(0)
-    x_test = generate_input(0.05)
     sin2_train = [sin2(val) for val in generate_input(0)]
     sin2_test = [sin2(val) for val in generate_input(0.05)]
     return sin2_train, sin2_test
@@ -71,21 +69,25 @@ def gen_square_data():
 
 
 def plot_prediction():
-    network = RBFNetwork(n_inputs=1, n_rbf=50, n_outputs=1)
+    network = RBFNetwork(n_inputs=1, n_rbf=63, n_outputs=1)
     sin2_train, sin2_test = gen_sin_data()
     square_train, square_test = gen_square_data()
-    network.fit(square_train, square_test)
+    network.fit(square_train, square_train)
 
     x = np.linspace(0, 2*np.pi, 100)
-    y = np.zeros(x.shape)
-    for i, x_i in enumerate(x):
-        y[i] = network.predict(x_i)
+    y = list(map(network.predict, x))
+    sin2_target = list(map(sin2, x))
+    square_target = list(map(square, x))
 
-    plt.plot(x, y)
+    plt.plot(x, y, label='Fit')
+    plt.plot(x, sin2_target, label='Target')
+    plt.legend()
     plt.show()
 
 
-plot_prediction()
+def plot_error():
+    # plot error as function of number of rbfs
+    rbf_ = np.arange(0, 63)
 
 
 x_train = generate_input(0)
@@ -96,8 +98,8 @@ sin2_test = list(map(sin2, generate_input(0.05)))
 square_train = list(map(square, generate_input(0)))
 square_test = list(map(square, generate_input(0.05)))
 
-network = RBFNetwork(n_inputs=1, n_rbf=63, n_outputs=1)
-network.fit(sin2_train, sin2_train)
+network = RBFNetwork(n_inputs=1, n_rbf=62, n_outputs=1)
+network.fit(x_train, sin2_train)
 print(network.predict([0.5, 0]))
 print(sin2(np.array([0.5, 0])))
 # network.RBF(0.5, 0.45)
