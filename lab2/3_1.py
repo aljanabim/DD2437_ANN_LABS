@@ -46,7 +46,7 @@ def sin2(x):
 
 
 def square(x):
-    if np.sin(x) >= 0:
+    if np.sin(2*x) >= 0:
         return 1
     else:
         return -1
@@ -96,6 +96,7 @@ def plot_prediction(func):
 
 
 def plot_error():
+    MAKE_SQAURE_GREAT = False
     n_train = 64
     n_test = 63
 
@@ -113,18 +114,23 @@ def plot_error():
         network = RBFNetwork(n_inputs=1, n_rbf=n, n_outputs=1)
         network.fit(train_patterns, train_targets)
 
-        train_preds = network.predict(train_patterns)
-        error_train[i] = np.linalg.norm(
-            train_preds-train_targets)/n_train
+        if MAKE_SQAURE_GREAT:
+            train_preds = list(map(square, network.predict(train_patterns)))
+        else:
+            train_preds = network.predict(train_patterns)
+        error_train[i] = np.sum(np.abs(train_preds-train_targets))/n_train
 
-        test_preds = network.predict(test_patterns)
-        error_test[i] = np.linalg.norm(
-            test_preds-test_targets)/n_test
+        if MAKE_SQAURE_GREAT:
+            test_preds = list(map(square, network.predict(test_patterns)))
+        else:
+            test_preds = network.predict(test_patterns)
+        error_test[i] = np.sum(np.abs(test_preds-test_targets))/n_test
 
         plt.xlabel('#RBF nodes')
-        plt.ylabel('MSE')
+        plt.ylabel('Residual error')
     plt.plot(rbfs, error_train, label='Training set')
     plt.plot(rbfs, error_test, label='Test set')
+    plt.title('Residual error over the number of RBFs, variance='+str(VAR))
     plt.legend()
     plt.show()
 
