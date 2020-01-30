@@ -23,12 +23,30 @@ class RBFNetwork():
             phi = self.RBF(self.data, self.rbf_centers)
             w = np.dot(np.dot(np.linalg.pinv(np.dot(phi.T, phi)), phi.T), f)
 
+            print(w)
+
     def predict(self, x):
         x = np.array([x]).T
         # print(self.w.shape, x.shape, self.rbf_centers.shape)
         # print()
         # print(self.RBF(x, self.rbf_centers).T.shape)
         return np.dot(self.w, self.RBF(x, self.rbf_centers).T)
+
+
+
+
+def plot_prediction():
+    network = RBFNetwork(n_inputs=1, n_rbf=50, n_outputs=1)
+
+    x = np.linspace(0, 2*np.pi, 100)
+    y = np.zeros(x.shape)
+    for i, x_i in enumerate(x):
+        y[i] = network.predict(x_i)
+        
+
+
+
+
 
 
 def sin2(x):
