@@ -4,6 +4,19 @@ from rbf_net import RBFNetwork
 plt.style.use('ggplot')
 
 np.random.seed(3)
+VARS = [10, 1, 0.1, 0.01, 0.001]
+VAR = 0.1
+
+
+def sin2(x):
+    return np.sin(2 * x)
+
+
+def square(x):
+    if np.sin(2 * x) >= 0:
+        return 1
+    else:
+        return -1
 
 def sin2(x):
     return np.sin(2 * x)
@@ -40,21 +53,14 @@ def plot_prediction(func):
     n_test = 63
     func = sin2
 
-<<<<<<< HEAD
     network = RBFNetwork(n_inputs=1, n_rbf=64, n_outputs=1, n_epochs=200,
                          learning_rate_start=0.1, learning_rate_end=0.001)
-=======
-    network = RBFNetwork(n_inputs=1, n_rbf=60, n_outputs=1, n_epochs=100)
->>>>>>> 3105d11841206e4f5db3610bb9b68f2a8e3ba16c
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
         n_train, n_test, func, noise_var=0.001)
 
-<<<<<<< HEAD
     print(network.learning_rate)
     print(network.learning_rate_decay)
     print(np.exp(-network.learning_rate_decay))
-=======
->>>>>>> 3105d11841206e4f5db3610bb9b68f2a8e3ba16c
     network.fit(train_patterns, train_targets, method='sequential')
     train_preds = network.predict(train_patterns)
     print(network.learning_rate)
@@ -66,8 +72,38 @@ def plot_prediction(func):
     plt.plot(network.learning_rate_record)
     plt.show()
 
+def plot_error(func):
+    n_train = 64
+    n_test = 63
+
+    rbfs = np.arange(1, 100)
+
+    train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+        n_train, n_test, func, noise_var=0)
+
+    n_train = len(train_patterns)
+    n_test = len(test_patterns)
+    mse_train = np.zeros(len(rbfs))
+    mse_test = np.zeros(len(rbfs))
+
+    for i, n in enumerate(rbfs):
+        network = RBFNetwork(n_inputs=1, n_rbf=n, n_outputs=1, n_epochs=100)
+        network.fit(train_patterns, train_targets, method='sequential')
+
+        train_preds = network.predict(train_patterns)
+        mse_train[i] = np.linalg.norm(train_preds - train_targets)**2 / n_train
+        test_preds = network.predict(test_patterns)
+        mse_test[i] = np.linalg.norm(test_preds - test_targets)**2 / n_test
+
+        plt.xlabel('#RBF nodes')
+        plt.ylabel('Residual error')
+    plt.plot(rbfs, mse_train, 'r', label='Training set')
+    plt.plot(rbfs, mse_test, 'b', label='Test set')
+    plt.title('Residual error over the number of RBFs, #data-points=' +
+              str(n_train)+', RBF-variance=' + str(VAR))
+    plt.legend()
+    plt.show()
 
 
-
-
-plot_prediction(square)
+# plot_prediction(square)
+plot_error(sin2)
