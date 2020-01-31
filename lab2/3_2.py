@@ -40,14 +40,21 @@ def plot_prediction(func):
     n_test = 63
     func = sin2
 
+<<<<<<< HEAD
     network = RBFNetwork(n_inputs=1, n_rbf=64, n_outputs=1, n_epochs=200,
                          learning_rate_start=0.1, learning_rate_end=0.001)
+=======
+    network = RBFNetwork(n_inputs=1, n_rbf=60, n_outputs=1, n_epochs=100)
+>>>>>>> 3105d11841206e4f5db3610bb9b68f2a8e3ba16c
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
         n_train, n_test, func, noise_var=0.001)
 
+<<<<<<< HEAD
     print(network.learning_rate)
     print(network.learning_rate_decay)
     print(np.exp(-network.learning_rate_decay))
+=======
+>>>>>>> 3105d11841206e4f5db3610bb9b68f2a8e3ba16c
     network.fit(train_patterns, train_targets, method='sequential')
     train_preds = network.predict(train_patterns)
     print(network.learning_rate)
