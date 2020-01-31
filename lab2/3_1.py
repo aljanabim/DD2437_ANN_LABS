@@ -106,7 +106,7 @@ def plot_prediction(func):
     plt.show()
 
 
-def plot_error(filename, func, MAKE_SQAURE_GREAT=False):
+def plot_error(func, MAKE_SQAURE_GREAT=False):
     n_train = 64
     n_test = 63
 
@@ -155,13 +155,12 @@ def plot_error(filename, func, MAKE_SQAURE_GREAT=False):
     plt.title('Residual error over the number of RBFs, #data-points=' +
               str(n_train)+', RBF-variance=' + str(VAR))
     plt.legend()
-    # plt.savefig(filename)
     plt.show()
 
 
-plot_error(None, func=sin2, MAKE_SQAURE_GREAT=False)
-plot_error(None, func=square, MAKE_SQAURE_GREAT=False)
-plot_error(None, func=square, MAKE_SQAURE_GREAT=True)
+plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
+plot_error(func=square, MAKE_SQAURE_GREAT=False)
+plot_error(func=square, MAKE_SQAURE_GREAT=True)
 
 
 # x_train = generate_input(0)
