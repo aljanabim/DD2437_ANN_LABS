@@ -6,9 +6,9 @@ plt.style.use('ggplot')
 np.random.seed(3)
 
 
-def gen_func_data(n_train, n_test, func, noise_std=0):
+def gen_func_data(n_train, n_test, func, noise_var=0):
     patterns = np.linspace(0, 2 * np.pi, n_train + n_test)
-    noise = np.random.randn(n_train + n_test)*noise_std
+    noise = np.random.randn((n_train + n_test))*np.sqrt(noise_var)
     targets = np.array([func(x) for x in patterns]) + noise
 
     data = np.column_stack((patterns, targets))
@@ -29,18 +29,17 @@ def plot_prediction(func):
     n_train = 64
     n_test = 63
 
-    network = RBFNetwork(n_inputs=1, n_rbf=30, n_outputs=1)
+    network = RBFNetwork(n_inputs=1, n_rbf=60, n_outputs=1, n_epochs=200)
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
-        n_train, n_test, func, noise_std=0.1)
+        n_train, n_test, func, noise_var=0.1)
 
-    network.fit(train_patterns, train_targets, method='sequential')
+    network.fit(train_patterns, train_targets, method='batch')
     train_preds = network.predict(train_patterns)
-    targets = list(map(func, train_patterns))
-    print(train_preds)
     plt.plot(train_patterns, train_preds, 'o', color='m', label='Estimated')
-    plt.plot(train_patterns, targets, '+', color='c', label='Target')
+    plt.plot(train_patterns, train_targets, '+', color='c', label='Target')
     plt.legend()
     plt.show()
+
 
 def sin2(x):
     return np.sin(2 * x)
@@ -53,4 +52,4 @@ def square(x):
         return -1
 
 
-plot_prediction(sin2)
+plot_prediction(square)
