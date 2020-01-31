@@ -42,6 +42,7 @@ def plot_prediction(func):
     plt.legend()
     plt.show()
 
+
 def sin2(x):
     return np.sin(2 * x)
 
@@ -53,4 +54,4 @@ def square(x):
         return -1
 
 
-plot_prediction(sin2)
+plot_prediction(square)
