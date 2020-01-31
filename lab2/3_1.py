@@ -42,9 +42,10 @@ def generate_input(start, n_points=10):
     return patterns
 
 
-def gen_func_data(n_train, n_test, func):
+def gen_func_data(n_train, n_test, func, noise_std=0):
     patterns = np.linspace(0, 2 * np.pi, n_train + n_test)
-    targets = np.array([func(x) for x in patterns])
+    noise = np.random.randn(n_train + n_test)*noise_std
+    targets = np.array([func(x) for x in patterns]) + noise
 
     data = np.column_stack((patterns, targets))
     np.random.shuffle(data)
@@ -61,12 +62,12 @@ def gen_func_data(n_train, n_test, func):
 
 
 def plot_prediction(func):
-    n_train = 64
-    n_test = 63
+    n_train = 128
+    n_test = 128
 
     network = RBFNetwork(n_inputs=1, n_rbf=100, n_outputs=1)
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
-        n_train, n_test, func)
+        n_train, n_test, func, noise_std=0.5)
 
     network.fit(train_patterns, train_targets, method='sequential')
     train_preds = network.predict(train_patterns)
