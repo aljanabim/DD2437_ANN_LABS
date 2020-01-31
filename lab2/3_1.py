@@ -36,12 +36,6 @@ def classifier(x):
         return -1
 
 
-def generate_input(start, n_points=10):
-    patterns = np.linspace(start, 2 * np.pi, n_points)
-    np.random.shuffle(patterns)
-    return patterns
-
-
 def gen_func_data(n_train, n_test, func, noise_std=0):
     patterns = np.linspace(0, 2 * np.pi, n_train + n_test)
     noise = np.random.randn(n_train + n_test)*noise_std
@@ -130,28 +124,14 @@ def plot_error(func, MAKE_SQAURE_GREAT=False):
     plt.legend()
     plt.show()
 
-#
+
+# ALL NEEDED PLOTS
 # plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
 # plot_error(func=square, MAKE_SQAURE_GREAT=False)
-# plot_error(func=square, MAKE_SQAURE_GREAT=True)
+plot_error(func=square, MAKE_SQAURE_GREAT=True)
+
 
 plot_prediction(func=sin2)
-
-
-# x_train = generate_input(0)
-# x_test = generate_input(0.05)
-# sin2_train = list(map(sin2, generate_input(0)))
-# sin2_test = list(map(sin2, generate_input(0.05)))
-
-# square_train = list(map(square, generate_input(0)))
-# square_test = list(map(square, generate_input(0.05)))
-
-# network = RBFNetwork(n_inputs=1, n_rbf=63, n_outputs=1)
-# network.fit(x_train, sin2_train)
-# print(network.predict([x_train[3], x_train[5]]))
-# print(sin2(np.array([x_train[3], x_train[5]])))
-# network.RBF(0.5, 0.45)
-# print(network.w)
 
 
 # root = 'plots/3_1/'
