@@ -29,11 +29,11 @@ def plot_prediction(func):
     n_train = 64
     n_test = 63
 
-    network = RBFNetwork(n_inputs=1, n_rbf=60, n_outputs=1, n_epochs=200)
+    network = RBFNetwork(n_inputs=1, n_rbf=60, n_outputs=1, n_epochs=100)
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
         n_train, n_test, func, noise_var=0.1)
 
-    network.fit(train_patterns, train_targets, method='batch')
+    network.fit(train_patterns, train_targets, method='sequential')
     train_preds = network.predict(train_patterns)
     plt.plot(train_patterns, train_preds, 'o', color='m', label='Estimated')
     plt.plot(train_patterns, train_targets, '+', color='c', label='Target')
