@@ -4,6 +4,19 @@ from rbf_net import RBFNetwork
 plt.style.use('ggplot')
 
 np.random.seed(3)
+VARS = [10, 1, 0.1, 0.01, 0.001]
+VAR = 0.1
+
+
+def sin2(x):
+    return np.sin(2 * x)
+
+
+def square(x):
+    if np.sin(2 * x) >= 0:
+        return 1
+    else:
+        return -1
 
 
 def gen_func_data(n_train, n_test, func, noise_var=0):
@@ -41,15 +54,38 @@ def plot_prediction(func):
     plt.show()
 
 
-def sin2(x):
-    return np.sin(2 * x)
+def plot_error(func):
+    n_train = 64
+    n_test = 63
+
+    rbfs = np.arange(1, 100)
+
+    train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+        n_train, n_test, func, noise_var=0)
+
+    n_train = len(train_patterns)
+    n_test = len(test_patterns)
+    mse_train = np.zeros(len(rbfs))
+    mse_test = np.zeros(len(rbfs))
+
+    for i, n in enumerate(rbfs):
+        network = RBFNetwork(n_inputs=1, n_rbf=n, n_outputs=1, n_epochs=100)
+        network.fit(train_patterns, train_targets, method='sequential')
+
+        train_preds = network.predict(train_patterns)
+        mse_train[i] = np.linalg.norm(train_preds - train_targets)**2 / n_train
+        test_preds = network.predict(test_patterns)
+        mse_test[i] = np.linalg.norm(test_preds - test_targets)**2 / n_test
+
+        plt.xlabel('#RBF nodes')
+        plt.ylabel('Residual error')
+    plt.plot(rbfs, mse_train, 'r', label='Training set')
+    plt.plot(rbfs, mse_test, 'b', label='Test set')
+    plt.title('Residual error over the number of RBFs, #data-points=' +
+              str(n_train)+', RBF-variance=' + str(VAR))
+    plt.legend()
+    plt.show()
 
 
-def square(x):
-    if np.sin(2 * x) >= 0:
-        return 1
-    else:
-        return -1
-
-
-plot_prediction(square)
+# plot_prediction(square)
+plot_error(sin2)

@@ -35,8 +35,6 @@ class RBFNetwork():
         if method == "sequential":
             for _ in range(self.n_epochs):
                 for k, x_k in enumerate(data):
-                    # temp_learning_rate = self.learning_rate/np.sqrt(k)
-                    # print(temp_learning_rate)
                     error = f[k] - self.predict(x_k)
                     delta_w = self.learning_rate * error * \
                         self.RBF(x_k, self.rbf_centers)

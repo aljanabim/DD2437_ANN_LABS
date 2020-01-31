@@ -126,12 +126,12 @@ def plot_error(func, MAKE_SQAURE_GREAT=False):
 
 
 # ALL NEEDED PLOTS
-# plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
+plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
 # plot_error(func=square, MAKE_SQAURE_GREAT=False)
-plot_error(func=square, MAKE_SQAURE_GREAT=True)
+# plot_error(func=square, MAKE_SQAURE_GREAT=True)
 
 
-plot_prediction(func=sin2)
+# plot_prediction(func=sin2)
 
 
 # root = 'plots/3_1/'
