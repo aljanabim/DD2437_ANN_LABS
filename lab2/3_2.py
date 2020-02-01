@@ -72,6 +72,9 @@ def plot_prediction(func):
     plt.plot(network.learning_rate_record)
     plt.show()
 
+def calc_mse(predictions, targets):
+    return np.linalg.norm(predictions - targets)**2 / len(targets)
+
 def plot_error(func):
     n_train = 64
     n_test = 63
@@ -104,6 +107,77 @@ def plot_error(func):
     plt.legend()
     plt.show()
 
+def plot_convergence_comparison(func):
+    n_nodes = 5
+    n_trials = 10
+    n_epochs = 1000
+    learning_rates = [(0.1, 0.1),
+                      (0.05, 0.05),
+                      (0.01, 0.01),
+                      (0.005, 0.005),
+                      (0.001, 0.001),
+                      (0.1, 0.001)]
+
+    mses = np.zeros((len(learning_rates), n_trials, n_epochs))
+    for i, rate in enumerate(learning_rates):
+        n_train = 64
+        n_test = 63
+        for j in range(n_trials):
+            train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+                n_train, n_test, func, noise_var=0.1)
+
+            net = RBFNetwork(n_inputs=1, n_rbf=n_nodes, n_outputs=1, n_epochs=n_epochs,
+                             learning_rate_start=rate[0], learning_rate_end=rate[1])
+
+            net.fit(train_patterns, train_targets, method='sequential')
+            mses[i, j, :] = net.mse_record
+
+    average_mses = np.mean(mses, 1)
+    for i, rate in enumerate(learning_rates):
+        plt.semilogx(average_mses[i, :], label="Learning rate: {}".format(rate[0]))
+
+    plt.title("Comparison of convergence speeds for different learning rates")
+    plt.xlabel("Epoch")
+    plt.ylabel("Mean Squared Error")
+    plt.legend()
+    plt.show()
+
+
+def final_test_error_comparison(func):
+    n_train = 64
+    n_test = 63
+    n_nodes = 5
+    n_trials = 10
+    n_epochs = 1000
+
+    mses = np.zeros((n_trials))
+
+    for i in range(n_trials):
+        train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+            n_train, n_test, func, noise_var=0)
+
+        net = RBFNetwork(n_inputs=1, n_rbf=n_nodes, n_outputs=1, n_epochs=n_epochs,
+                         learning_rate_start=0.1, learning_rate_end=0.001)
+
+        net.fit(train_patterns, train_targets, method='sequential')
+        test_preds = net.predict(test_patterns)
+        mses[i] = calc_mse(test_preds, test_targets)
+
+    mse_mean = np.mean(mses)
+    mse_std = np.std(mses)/len(mses)
+
+    print("Mean Square Error: {:.2f} +/- {:.2f}".format(mse_mean, mse_std))
+
+
+
+
+
+
+
+
+
 
 # plot_prediction(square)
-plot_error(sin2)
+# plot_error(sin2)
+# plot_convergence_comparison(sin2)
+final_test_error_comparison(sin2)

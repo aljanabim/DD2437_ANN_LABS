@@ -24,13 +24,14 @@ class RBFNetwork():
         self.learning_rate_decay = -(1/n_epochs) * ( np.log(learning_rate_end) - np.log(learning_rate_start) )
         self.learning_rate = learning_rate_start
         self.learning_rate_record = []
+        self.mse_record = None
 
     def _base_func(self, x, center):
         return np.exp(-np.linalg.norm(x - center)**2 / (2 * self.rbf_var**2))
 
     def fit(self, data, f, method='batch'):
+        self.mse_record = []
         self.data = np.array([data]).T
-
         if method == 'batch':
             phi = self.RBF(self.data, self.rbf_centers)
             self.w = np.dot(
@@ -44,6 +45,13 @@ class RBFNetwork():
                     self.w += delta_w
                 self.learning_rate *= np.exp(-self.learning_rate_decay)
                 self.learning_rate_record.append(self.learning_rate)
+
+                preds = self.predict(data)
+                self.mse_record.append(self.calc_mse(preds, f))
+
+    def calc_mse(self, preds, targets):
+        return np.sum(np.power(preds - targets, 2))/len(targets)
+
 
     def predict(self, x):
         x = np.array([x]).T
