@@ -4,7 +4,7 @@ from rbf_net import RBFNetwork
 plt.style.use('ggplot')
 
 np.random.seed(3)
-VARS = [10, 1, 0.1, 0.01, 0.001]
+
 VAR = 0.1
 
 
@@ -17,6 +17,7 @@ def square(x):
         return 1
     else:
         return -1
+
 
 def sin2(x):
     return np.sin(2 * x)
@@ -72,8 +73,10 @@ def plot_prediction(func):
     plt.plot(network.learning_rate_record)
     plt.show()
 
+
 def calc_mse(predictions, targets):
     return np.linalg.norm(predictions - targets)**2 / len(targets)
+
 
 def plot_error(func):
     n_train = 64
@@ -107,6 +110,7 @@ def plot_error(func):
     plt.legend()
     plt.show()
 
+
 def plot_convergence_comparison(func):
     n_nodes = 5
     n_trials = 10
@@ -134,7 +138,8 @@ def plot_convergence_comparison(func):
 
     average_mses = np.mean(mses, 1)
     for i, rate in enumerate(learning_rates):
-        plt.semilogx(average_mses[i, :], label="Learning rate: {}".format(rate[0]))
+        plt.semilogx(average_mses[i, :],
+                     label="Learning rate: {}".format(rate[0]))
 
     plt.title("Comparison of convergence speeds for different learning rates")
     plt.xlabel("Epoch")
@@ -169,15 +174,69 @@ def final_test_error_comparison(func):
     print("Mean Square Error: {:.2f} +/- {:.2f}".format(mse_mean, mse_std))
 
 
+def plot_variance(func):
+    VARS = [10, 1, 0.1, 0.01, 0.001]
+    n_train = 64
+    n_test = 63
+    rbfs = np.arange(1, 100)
+    noise_var = 0.1
+
+    train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+        n_train, n_test, func, noise_var=noise_var)
+
+    for var in VARS:
+        error = np.zeros(len(rbfs))
+        for i, n_rbf in enumerate(rbfs):
+            network = RBFNetwork(n_inputs=1, n_rbf=n_rbf,
+                                 n_outputs=1, rbf_var=var)
+            network.fit(train_patterns, train_targets, 'batch')
+            preds = network.predict(train_patterns)
+            mse = network.calc_mse(preds, train_targets)
+            error[i] = mse
+        plt.plot(rbfs, error, label='RBF variance: '+str(var))
+        plt.legend()
+    plt.xlabel('#RBF nodes')
+    plt.ylabel('MSE')
+    plt.title('Variance comparison for ' +
+              func.__name__ + ' with data noise of '+str(int(noise_var*100)) + '%')
+    plt.show()
 
 
+def plot_centers(func):
+    VARS = [10, 1, 0.1, 0.01, 0.001]
+    n_train = 64
+    n_test = 63
+    rbfs = np.arange(1, 100)
+    noise_var = 0.1
 
+    centering = ['linspace', 'random']
 
+    train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+        n_train, n_test, func, noise_var=noise_var)
 
-
+    for center in centering:
+        error = np.zeros(len(rbfs))
+        for i, n_rbf in enumerate(rbfs):
+            network = RBFNetwork(n_inputs=1, n_rbf=n_rbf,
+                                 n_outputs=1, centering=center)
+            network.fit(train_patterns, train_targets, 'batch')
+            preds = network.predict(train_patterns)
+            mse = network.calc_mse(preds, train_targets)
+            error[i] = mse
+        plt.plot(rbfs, error, label='Centering using: '+str(center))
+        plt.legend()
+    plt.xlabel('#RBF nodes')
+    plt.ylabel('MSE')
+    plt.title('Centering comparison for ' +
+              func.__name__ + ' with data noise of '+str(int(noise_var*100)) + '%')
+    plt.show()
 
 
 # plot_prediction(square)
 # plot_error(sin2)
 # plot_convergence_comparison(sin2)
-final_test_error_comparison(sin2)
+# final_test_error_comparison(sin2)
+# plot_variance(sin2)
+# plot_variance(square)
+# plot_centers(sin2)
+# plot_centers(square)

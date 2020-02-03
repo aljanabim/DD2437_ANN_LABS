@@ -11,20 +11,27 @@ class RBFNetwork():
                  learning_rate_end=0.001,
                  min_val=0.05,
                  max_val=2 * np.pi,
-                 rbf_var=0.1):
+                 rbf_var=0.1,
+                 centering='linspace'):
         self.n_inputs = n_inputs
         self.n_rbf = n_rbf
         self.n_outputs = n_outputs
         self.n_epochs = n_epochs
         self.rbf_var = rbf_var
 
-        self.rbf_centers = np.array([np.linspace(min_val, max_val, n_rbf)])
         self.w = np.array([np.random.normal(0, 1, n_rbf)])
         self.RBF = np.vectorize(self._base_func)
-        self.learning_rate_decay = -(1/n_epochs) * ( np.log(learning_rate_end) - np.log(learning_rate_start) )
+        self.learning_rate_decay = - \
+            (1/n_epochs) * (np.log(learning_rate_end) - np.log(learning_rate_start))
         self.learning_rate = learning_rate_start
         self.learning_rate_record = []
         self.mse_record = None
+
+        if centering == 'linspace':
+            self.rbf_centers = np.array([np.linspace(min_val, max_val, n_rbf)])
+        elif centering == 'random':
+            self.rbf_centers = np.array(
+                [np.random.uniform(min_val, max_val, n_rbf)])
 
     def _base_func(self, x, center):
         return np.exp(-np.linalg.norm(x - center)**2 / (2 * self.rbf_var**2))
@@ -51,7 +58,6 @@ class RBFNetwork():
 
     def calc_mse(self, preds, targets):
         return np.sum(np.power(preds - targets, 2))/len(targets)
-
 
     def predict(self, x):
         x = np.array([x]).T
