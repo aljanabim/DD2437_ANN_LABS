@@ -23,7 +23,8 @@ def plot_animal_clusters():
     animal_props, animal_names = animal_data()
     n_inputs = animal_props.shape[1]
     n_nodes = 100
-    net = SOMNetwork(n_inputs=n_inputs, n_nodes=n_nodes)
+    net = SOMNetwork(n_inputs=n_inputs, n_nodes=n_nodes, step_size=0.2,
+                     topology='linear', neighbourhood_start=50, neighbourhood_end=1, n_epochs=120, seed=15)
     pos = net.fit(animal_props)
 
     animal_dict = dict()

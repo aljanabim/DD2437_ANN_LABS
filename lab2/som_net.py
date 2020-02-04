@@ -4,18 +4,19 @@ from matplotlib import pyplot as plt
 
 class SOMNetwork():
     # 0.08 50 100
-    def __init__(self, n_inputs, n_nodes, step_size=0.2, topology='linear', neighbourhood_start=50, neighbourhood_end=1, n_epochs=120):
+    def __init__(self, n_inputs, n_nodes, step_size=0.2, topology='linear', neighbourhood_start=50, neighbourhood_end=1, n_epochs=120, seed=False):
         self.n_inputs = n_inputs
         self.n_nodes = n_nodes
         self.n_epochs = n_epochs
         self.step_size = step_size
-        self.toplogy = topology
+        self.topology = topology
         self.neighbourhood = neighbourhood_start
         self.neighbourhood_start = neighbourhood_start
         self.neighbourhood_end = neighbourhood_end
         self.neighbourhood_decay_rate = - \
             (1/n_epochs)*np.log(self.neighbourhood_end/self.neighbourhood_start)
-        np.random.seed(15)
+        if seed:
+            np.random.seed(seed)
         self.w = np.random.random((n_nodes, n_inputs))
 
     def fit(self, data):
@@ -64,7 +65,7 @@ class SOMNetwork():
 
         # self.w[winning_row_index, :] += self.step_size * \
         #     (self.w[winning_row_index, :]-data_row)
-        if self.toplogy == 'linear':
+        if self.topology == 'linear':
             if winning_row_index < neighbourhood:
                 self.w[0:winning_row_index+neighbourhood, :] += self.step_size * \
                     (data_row-self.w[0:winning_row_index+neighbourhood, :])
@@ -74,5 +75,24 @@ class SOMNetwork():
                     (data_row-self.w[winning_row_index -
                                      neighbourhood:winning_row_index+neighbourhood, :])
 
-        if self.toplogy == 'circular':
-            print('cirles')
+        if self.topology == 'circular':
+            if winning_row_index < neighbourhood:
+                self.w[w_height-neighbourhood+winning_row_index:, :] += self.step_size * \
+                    (data_row-self.w[w_height -
+                                     neighbourhood+winning_row_index:, :])
+                self.w[winning_row_index:winning_row_index+neighbourhood, :] += self.step_size * \
+                    (data_row -
+                     self.w[winning_row_index:winning_row_index+neighbourhood, :])
+
+            elif winning_row_index+neighbourhood > w_height-1:
+                self.w[0:w_height-winning_row_index-1+neighbourhood, :] += self.step_size * \
+                    (data_row-self.w[0:w_height -
+                                     winning_row_index-1+neighbourhood, :])
+                self.w[winning_row_index-neighbourhood:, :] += self.step_size * \
+                    (data_row -
+                     self.w[winning_row_index-neighbourhood:, :])
+
+            else:
+                self.w[winning_row_index-neighbourhood:winning_row_index+neighbourhood, :] += self.step_size * \
+                    (data_row-self.w[winning_row_index -
+                                     neighbourhood:winning_row_index+neighbourhood, :])
