@@ -21,7 +21,6 @@ def animal_data():
 
 def plot_animal_clusters():
     animal_props, animal_names = animal_data()
-    # print(animal_props[-2, 27])
     n_inputs = animal_props.shape[1]
     n_nodes = 100
     net = SOMNetwork(n_inputs=n_inputs, n_nodes=n_nodes)
