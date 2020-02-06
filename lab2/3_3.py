@@ -85,7 +85,7 @@ def ballistic():
                   (0, 1, n_rbf_y)]
 
     # Init model
-    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=5000,
+    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=50,
                          learning_rate_start=0.01, learning_rate_end=0.01,
                          rbf_var=0.05, cl_learning_rate=0.01, cl_leak_rate = 0.000001,
                          centering='linspace2d', rbf_layout=rbf_layout,
@@ -140,21 +140,19 @@ def ballistic():
     plt.legend()
     plt.show()
 
-
-    params = []
-
-    for param in params:
-        # Init model
+    # Compare different rbf layouts
+    rbf_sides = [1, 2, 3, 4, 5, 6, 7, 8]
+    for rbf_side in rbf_sides:
+        n_rbf = n_rbf_x*n_rbf_y
+        rbf_layout = [(0, 1, rbf_side),
+                      (0, 1, rbf_side)]
         network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=1000,
                              learning_rate_start=0.01, learning_rate_end=0.01,
                              rbf_var=0.1, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
                              centering='linspace2d', rbf_layout=rbf_layout,
                              validation_patterns=test_patterns, validation_targets=test_targets)
-        # Train model
         network.fit(train_patterns, train_targets, method='sequential', cl_method='leaky')
-        # Plot MSE plots
-        plt.plot(network.validation_mse_record, label='Parameter: {}'.format(param))
-
+        plt.semilogy(network.validation_mse_record, label='RBF grid side size: {}'.format(rbf_side))
     plt.title("Comparison of MSE")
     plt.xlabel("Epoch")
     plt.ylabel("Mean Squared Error")
