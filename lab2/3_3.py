@@ -65,117 +65,104 @@ def get_ballistic_data():
 
 def ballistic():
 
+    # Hyperparams
     n_train = 120
     n_test = 120
     func = sin2
     n_rbf_x = 8
     n_rbf_y = 8
 
-    n_rbf = n_rbf_x*n_rbf_y
-    rbf_layout = [(0, 1, n_rbf_x),
-                  (0, 1, n_rbf_y)]
-
+    # Get data
     train_patterns, train_targets, test_patterns, test_targets = get_ballistic_data()
-
-    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=1000,
-                         learning_rate_start=0.01, learning_rate_end=0.01,
-                         rbf_var=0.1, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
-                         centering='linspace2d', rbf_layout=rbf_layout,
-                         validation_patterns=test_patterns, validation_targets=test_targets)
-
-
     train_patterns = train_patterns[:]
     train_targets = train_targets[:]
     test_patterns = test_patterns[:]
     test_targets = test_targets[:]
 
-    network.fit(train_patterns, train_targets, method='sequential', cl_method='basic')
-    train_preds = network.predict(train_patterns)
+    # Set up rbf layout
+    n_rbf = n_rbf_x*n_rbf_y
+    rbf_layout = [(0, 1, n_rbf_x),
+                  (0, 1, n_rbf_y)]
 
-    # plt.plot(network.mse_record, label='Training MSE')
-    # plt.plot(network.validation_mse_record, label='Validation MSE')
-    # plt.legend()
-    # plt.show()
-    #
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.scatter(train_patterns[:,0], train_patterns[:,1], train_targets[:,0])
-    # ax.scatter(train_patterns[:,0], train_patterns[:,1], train_preds[:,0])
-    # ax.scatter(network.rbf_centers[:,0], network.rbf_centers[:,1], np.zeros(network.rbf_centers[:,1].shape), color='black')
-    # plt.show()
+    # Init model
+    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=5000,
+                         learning_rate_start=0.01, learning_rate_end=0.01,
+                         rbf_var=0.05, cl_learning_rate=0.01, cl_leak_rate = 0.000001,
+                         centering='linspace2d', rbf_layout=rbf_layout,
+                         validation_patterns=test_patterns, validation_targets=test_targets)
 
-
+    # Plotting prep
     x = train_patterns[:,0]
     y = train_patterns[:,1]
     z = train_targets[:,0]
-
     xi = np.linspace(-0.1, 1.1, 100)
     yi = np.linspace(-0.1, 1.1, 100)
-    # grid the data.
+
+    # Plot target
     zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
     CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
     plt.xlabel("Velocity")
     plt.ylabel("Angle")
-    plt.title("Height as function of velocity and angle")
+    plt.title("Target")
     cb = plt.colorbar()
     cb.set_label("Height", rotation=270, labelpad=12)
-
     plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
-             markeredgecolor='black', label='RBF Centers')
+             markeredgecolor='black', label='Initial RBF Centers')
     plt.legend()
     plt.show()
 
+    # Train network
+    network.fit(train_patterns, train_targets, method='sequential', cl_method='leaky')
 
-    x = train_patterns[:,0]
-    y = train_patterns[:,1]
+    # Predict train data
+    train_preds = network.predict(train_patterns)
+
+    # Plot prediction
     z = train_preds[:,0]
-
-    xi = np.linspace(-0.1, 1.1, 100)
-    yi = np.linspace(-0.1, 1.1, 100)
-    # grid the data.
     zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
     CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
     plt.xlabel("Velocity")
     plt.ylabel("Angle")
-    plt.title("Height as function of velocity and angle")
+    plt.title("Prediction")
     cb = plt.colorbar()
     cb.set_label("Height", rotation=270, labelpad=12)
-
     plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
-             markeredgecolor='black', label='RBF Centers')
+             markeredgecolor='black', label='Trained RBF Centers')
+    plt.legend()
+    plt.show()
+
+    # Plot MSE plots
+    plt.plot(network.mse_record, label='Training MSE')
+    plt.plot(network.validation_mse_record, label='Validation MSE')
+    plt.title("Convergence of MSE")
+    plt.xlabel("Epoch")
+    plt.ylabel("Mean Squared Error")
     plt.legend()
     plt.show()
 
 
-    # plt.plot(train_patterns[:,1], train_preds[:,0], 'o', label="Prediction")
-    # plt.plot(train_patterns[:,1], train_targets[:,0], 'o', label="Target")
-    # plt.legend()
-    # plt.show()
-    #
-    #
-    # test_preds = network.predict(test_patterns)
-    # plt.plot(test_patterns[:,0], test_preds[:,0], 'o', label="Prediction")
-    # plt.plot(test_patterns[:,0], test_targets[:,0], 'o', label="Target")
-    # plt.legend()
-    # plt.show()
+    params = []
+
+    for param in params:
+        # Init model
+        network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=1000,
+                             learning_rate_start=0.01, learning_rate_end=0.01,
+                             rbf_var=0.1, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
+                             centering='linspace2d', rbf_layout=rbf_layout,
+                             validation_patterns=test_patterns, validation_targets=test_targets)
+        # Train model
+        network.fit(train_patterns, train_targets, method='sequential', cl_method='leaky')
+        # Plot MSE plots
+        plt.plot(network.validation_mse_record, label='Parameter: {}'.format(param))
+
+    plt.title("Comparison of MSE")
+    plt.xlabel("Epoch")
+    plt.ylabel("Mean Squared Error")
+    plt.legend()
+    plt.show()
 
 
-    # x = test_patterns[:, 0]
-    # y = test_patterns[:, 1]
-    # z = test_targets[:, 1]
-    #
-    #
-    # grid_x, grid_y = np.mgrid[0:1:0.001, 0:1:0.001]
-    # grid_x, grid_y = np.meshgrid(np.linspace(0, 1, 200), np.linspace(0, 1, 200))
-    # grid_z = interpolate.griddata((x, y), z, (grid_x, grid_y), method='nearest')
-    # print(grid_z)
-    #
-    # CS = plt.contour(grid_x, grid_y, grid_z, 15, linewidths=0.5, colors='k')
-    # CS = plt.contourf(grid_x, grid_y, grid_z, 15,
-    #                   vmax=abs(grid_z).max(), vmin=-abs(grid_z).max())
-    #
-    # plt.colorbar()  # draw colorbar
-    # plt.show()
+
 
 
 def test_cl():
