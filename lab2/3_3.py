@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.interpolate import griddata
 # from rbf_net import RBFNetwork
 from rbf_net_2d import RBFNetwork
 from mpl_toolkits.mplot3d import Axes3D
@@ -53,8 +54,8 @@ def gen_func_data(n_train, n_test, func, noise_var=0):
 
 
 def get_ballistic_data():
-    train_data = np.loadtxt('data/ballist.dat')
-    test_data = np.loadtxt('data/balltest.dat')
+    train_data = np.loadtxt('lab2/data/ballist.dat')
+    test_data = np.loadtxt('lab2/data/balltest.dat')
 
     train_patterns, train_targets = train_data[:, :2], train_data[:, 2:]
     test_patterns, test_targets = test_data[:, :2], test_data[:, 2:]
@@ -67,33 +68,96 @@ def ballistic():
     n_train = 120
     n_test = 120
     func = sin2
-    n_rbf_x = 2
-    n_rbf_y = 2
+    n_rbf_x = 8
+    n_rbf_y = 8
 
     n_rbf = n_rbf_x*n_rbf_y
     rbf_layout = [(0, 1, n_rbf_x),
                   (0, 1, n_rbf_y)]
 
-    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=100,
-                         learning_rate_start=0.1, learning_rate_end=0.1,
-                         rbf_var=0.5, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
-                         min_val=-2, max_val=9, centering='linspace2d', rbf_layout=rbf_layout)
     train_patterns, train_targets, test_patterns, test_targets = get_ballistic_data()
 
-    train_patterns = train_patterns[:5]
-    train_targets = train_targets[:5]
-    test_patterns = test_patterns[:5]
-    test_targets = test_targets[:5]
+    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=1000,
+                         learning_rate_start=0.01, learning_rate_end=0.01,
+                         rbf_var=0.1, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
+                         centering='linspace2d', rbf_layout=rbf_layout,
+                         validation_patterns=test_patterns, validation_targets=test_targets)
 
-    network.fit(train_patterns, train_targets, method='sequential')
-    test_preds = network.predict(test_patterns)
-    print("Patterns {}".format(test_patterns))
-    print("Preds {}".format(test_preds))
-    plt.plot(test_patterns[:,0], test_preds[:,0], label="Prediction")
-    plt.plot(test_patterns[:,0], test_targets[:,0], label="Target")
+
+    train_patterns = train_patterns[:]
+    train_targets = train_targets[:]
+    test_patterns = test_patterns[:]
+    test_targets = test_targets[:]
+
+    network.fit(train_patterns, train_targets, method='sequential', cl_method='basic')
+    train_preds = network.predict(train_patterns)
+
+    # plt.plot(network.mse_record, label='Training MSE')
+    # plt.plot(network.validation_mse_record, label='Validation MSE')
+    # plt.legend()
+    # plt.show()
+    #
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.scatter(train_patterns[:,0], train_patterns[:,1], train_targets[:,0])
+    # ax.scatter(train_patterns[:,0], train_patterns[:,1], train_preds[:,0])
+    # ax.scatter(network.rbf_centers[:,0], network.rbf_centers[:,1], np.zeros(network.rbf_centers[:,1].shape), color='black')
+    # plt.show()
+
+
+    x = train_patterns[:,0]
+    y = train_patterns[:,1]
+    z = train_targets[:,0]
+
+    xi = np.linspace(-0.1, 1.1, 100)
+    yi = np.linspace(-0.1, 1.1, 100)
+    # grid the data.
+    zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
+    CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
+    plt.xlabel("Velocity")
+    plt.ylabel("Angle")
+    plt.title("Height as function of velocity and angle")
+    cb = plt.colorbar()
+    cb.set_label("Height", rotation=270, labelpad=12)
+
+    plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
+             markeredgecolor='black', label='RBF Centers')
     plt.legend()
     plt.show()
 
+
+    x = train_patterns[:,0]
+    y = train_patterns[:,1]
+    z = train_preds[:,0]
+
+    xi = np.linspace(-0.1, 1.1, 100)
+    yi = np.linspace(-0.1, 1.1, 100)
+    # grid the data.
+    zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
+    CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
+    plt.xlabel("Velocity")
+    plt.ylabel("Angle")
+    plt.title("Height as function of velocity and angle")
+    cb = plt.colorbar()
+    cb.set_label("Height", rotation=270, labelpad=12)
+
+    plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
+             markeredgecolor='black', label='RBF Centers')
+    plt.legend()
+    plt.show()
+
+
+    # plt.plot(train_patterns[:,1], train_preds[:,0], 'o', label="Prediction")
+    # plt.plot(train_patterns[:,1], train_targets[:,0], 'o', label="Target")
+    # plt.legend()
+    # plt.show()
+    #
+    #
+    # test_preds = network.predict(test_patterns)
+    # plt.plot(test_patterns[:,0], test_preds[:,0], 'o', label="Prediction")
+    # plt.plot(test_patterns[:,0], test_targets[:,0], 'o', label="Target")
+    # plt.legend()
+    # plt.show()
 
 
     # x = test_patterns[:, 0]
@@ -121,12 +185,14 @@ def test_cl():
     n_test = 120
     func = sin2
 
-    network = RBFNetwork(n_inputs=1, n_rbf=n_rbf, n_outputs=1, n_epochs=600,
-                         learning_rate_start=0.1, learning_rate_end=0.1,
-                         rbf_var=0.5, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
-                         min_val=-2, max_val=9)
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
         n_train, n_test, func, noise_var=0.01)
+
+    network = RBFNetwork(n_inputs=1, n_rbf=n_rbf, n_outputs=1, n_epochs=600,
+                         learning_rate_start=0.1, learning_rate_end=0.1,
+                         rbf_var=0.5, cl_learning_rate=0.01, cl_leak_rate = 1,
+                         min_val=-2, max_val=9)
+
 
 
 

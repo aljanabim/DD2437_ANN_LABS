@@ -16,13 +16,14 @@ class RBFNetwork():
                  max_val=2 * np.pi,
                  rbf_var=0.1,
                  centering='linspace',
-                 rbf_layout=None):
+                 rbf_layout=None,
+                 validation_patterns=None,
+                 validation_targets=None):
         self.n_inputs = n_inputs
         self.n_rbf = n_rbf
         self.n_outputs = n_outputs
         self.n_epochs = n_epochs
         self.rbf_var = rbf_var
-
 
         self.w = np.random.normal(0, 1, (n_rbf, n_outputs))
         self.learning_rate_decay = (- (1/n_epochs) * (np.log(learning_rate_end)
@@ -33,6 +34,9 @@ class RBFNetwork():
 
         self.learning_rate_record = []
         self.mse_record = None
+        self.validation_targets = validation_targets
+        self.validation_patterns = validation_patterns
+        self.validation_mse_record = None
         # self.RBF = np.vectorize(self._base_func)
 
         if centering == 'linspace':
@@ -58,8 +62,10 @@ class RBFNetwork():
         # print("RBF {}".format(rbf_matrix))
         return rbf_matrix
 
-    def fit(self, data, f, method='batch', cl_method=None):
+    def fit(self, data, f, method='sequential', cl_method=None):
         self.mse_record = []
+        if self.validation_targets is not None:
+            self.validation_mse_record = []
         for _ in range(self.n_epochs):
             for k, x_k in enumerate(data):
                 if cl_method == "basic":
@@ -73,35 +79,39 @@ class RBFNetwork():
             preds = self.predict(data)
             self.mse_record.append(self.calc_mse(preds, f))
 
+            if self.validation_targets is not None:
+                validations_preds = self.predict(self.validation_patterns)
+                self.validation_mse_record.append(
+                    self.calc_mse(validations_preds, self.validation_targets))
+
     def _calc_delta_w(self, pattern, target):
         error = np.sum(np.abs(target - self.predict(pattern)))
         if len(pattern.shape) == 1:
             pattern = np.reshape(pattern, (1, -1))
-        print(pattern.shape)
-        print(self.RBF(pattern, self.rbf_centers).shape)
-        delta_w = self.learning_rate * error * \
-            self.RBF(pattern, self.rbf_centers)
+        if len(target.shape) == 1:
+            target = np.reshape(target, (1, -1))
+
+        rbf_vector = self.RBF(pattern, self.rbf_centers)
+        delta_w = self.learning_rate * rbf_vector.T @ (target - rbf_vector @ self.w)
         return delta_w
 
     def _cl_step(self, pattern, leaky=False):
+        if len(pattern.shape) == 1:
+            pattern = np.reshape(pattern, (1, -1))
         rbf_values = self.RBF(pattern, self.rbf_centers)
+        pattern = pattern.flatten()
         winner_index = np.argmax(rbf_values)
-        winner_center = self.rbf_centers[0, winner_index]
-        self.rbf_centers[0, winner_index] += self.cl_learning_rate*(pattern - winner_center)
+        winner_center = self.rbf_centers[winner_index, :]
+        self.rbf_centers[winner_index, :] += self.cl_learning_rate*(pattern.flatten() - winner_center)
         if leaky:
-            self.rbf_centers[0, :] += self.cl_leak_rate*(pattern - self.rbf_centers[0, :])
+            self.rbf_centers += self.cl_leak_rate*(pattern - self.rbf_centers)
 
     def calc_mse(self, preds, targets):
-        print(preds)
-        print(targets)
         return np.sum(np.power(preds - targets, 2))/len(targets)
 
     def predict(self, x):
         if len(x.shape) == 1:
             x = np.reshape(x, (1, -1))
-        print("x {}".format(x))
-        print("w {}".format(self.w))
-        print("rbf {}".format(self.RBF(x, self.rbf_centers)))
         prediction =  self.RBF(x, self.rbf_centers) @ self.w
         if len(prediction.shape) == 1:
             prediction = prediction.flatten()
