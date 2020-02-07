@@ -97,7 +97,6 @@ def project_on_grid(grid_size, result, base, baseMAP, colors=None):
     # Solution found at https://stackoverflow.com/questions/25482876/how-to-add-legend-to-imshow-in-matplotlib/39625380
 
     values = np.unique(base.ravel())
-    colors = [im.cmap(im.norm(value)) for value in values]
     patches = [mpatches.Patch(color=colors[i], label="{l}".format(
         l=baseMAP[values[i]])) for i in range(len(values))]
     plt.legend(handles=patches, bbox_to_anchor=(
