@@ -4,12 +4,13 @@ from matplotlib import pyplot as plt
 
 class SOMNetwork():
     # 0.08 50 100
-    def __init__(self, n_inputs, n_nodes, step_size=0.2, topology='linear', neighbourhood_start=50, neighbourhood_end=1, n_epochs=120, seed=False):
+    def __init__(self, n_inputs, n_nodes, step_size=0.2, topology='linear', grid_shape=None, neighbourhood_start=50, neighbourhood_end=1, n_epochs=120, seed=False):
         self.n_inputs = n_inputs
         self.n_nodes = n_nodes
         self.n_epochs = n_epochs
         self.step_size = step_size
         self.topology = topology
+        self.grid_shape = grid_shape
         self.neighbourhood = neighbourhood_start
         self.neighbourhood_start = neighbourhood_start
         self.neighbourhood_end = neighbourhood_end
@@ -96,3 +97,9 @@ class SOMNetwork():
                 self.w[winning_row_index-neighbourhood:winning_row_index+neighbourhood, :] += self.step_size * \
                     (data_row-self.w[winning_row_index -
                                      neighbourhood:winning_row_index+neighbourhood, :])
+
+        if self.topology == 'grid':
+            for data_point_index in range(self.n_inputs):
+                look_at = data_row[data_point_index]
+                weight_as_matrix = self.w[:, data_point_index].reshape(
+                    self.grid_shape)
