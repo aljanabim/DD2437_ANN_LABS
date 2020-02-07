@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.interpolate import griddata
 # from rbf_net import RBFNetwork
 from rbf_net_2d import RBFNetwork
 from mpl_toolkits.mplot3d import Axes3D
@@ -53,8 +54,8 @@ def gen_func_data(n_train, n_test, func, noise_var=0):
 
 
 def get_ballistic_data():
-    train_data = np.loadtxt('data/ballist.dat')
-    test_data = np.loadtxt('data/balltest.dat')
+    train_data = np.loadtxt('lab2/data/ballist.dat')
+    test_data = np.loadtxt('lab2/data/balltest.dat')
 
     train_patterns, train_targets = train_data[:, :2], train_data[:, 2:]
     test_patterns, test_targets = test_data[:, :2], test_data[:, 2:]
@@ -64,54 +65,102 @@ def get_ballistic_data():
 
 def ballistic():
 
+    # Hyperparams
     n_train = 120
     n_test = 120
     func = sin2
-    n_rbf_x = 2
-    n_rbf_y = 2
+    n_rbf_x = 8
+    n_rbf_y = 8
 
+    # Get data
+    train_patterns, train_targets, test_patterns, test_targets = get_ballistic_data()
+    train_patterns = train_patterns[:]
+    train_targets = train_targets[:]
+    test_patterns = test_patterns[:]
+    test_targets = test_targets[:]
+
+    # Set up rbf layout
     n_rbf = n_rbf_x*n_rbf_y
     rbf_layout = [(0, 1, n_rbf_x),
                   (0, 1, n_rbf_y)]
 
-    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=100,
-                         learning_rate_start=0.1, learning_rate_end=0.1,
-                         rbf_var=0.5, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
-                         min_val=-2, max_val=9, centering='linspace2d', rbf_layout=rbf_layout)
-    train_patterns, train_targets, test_patterns, test_targets = get_ballistic_data()
+    # Init model
+    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=50,
+                         learning_rate_start=0.01, learning_rate_end=0.01,
+                         rbf_var=0.05, cl_learning_rate=0.01, cl_leak_rate = 0.000001,
+                         centering='linspace2d', rbf_layout=rbf_layout,
+                         validation_patterns=test_patterns, validation_targets=test_targets)
 
-    train_patterns = train_patterns[:5]
-    train_targets = train_targets[:5]
-    test_patterns = test_patterns[:5]
-    test_targets = test_targets[:5]
+    # Plotting prep
+    x = train_patterns[:,0]
+    y = train_patterns[:,1]
+    z = train_targets[:,0]
+    xi = np.linspace(-0.1, 1.1, 100)
+    yi = np.linspace(-0.1, 1.1, 100)
 
-    network.fit(train_patterns, train_targets, method='sequential')
-    test_preds = network.predict(test_patterns)
-    print("Patterns {}".format(test_patterns))
-    print("Preds {}".format(test_preds))
-    plt.plot(test_patterns[:,0], test_preds[:,0], label="Prediction")
-    plt.plot(test_patterns[:,0], test_targets[:,0], label="Target")
+    # Plot target
+    zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
+    CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
+    plt.xlabel("Velocity")
+    plt.ylabel("Angle")
+    plt.title("Target")
+    cb = plt.colorbar()
+    cb.set_label("Height", rotation=270, labelpad=12)
+    plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
+             markeredgecolor='black', label='Initial RBF Centers')
+    plt.legend()
+    plt.show()
+
+    # Train network
+    network.fit(train_patterns, train_targets, method='sequential', cl_method='leaky')
+
+    # Predict train data
+    train_preds = network.predict(train_patterns)
+
+    # Plot prediction
+    z = train_preds[:,0]
+    zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
+    CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
+    plt.xlabel("Velocity")
+    plt.ylabel("Angle")
+    plt.title("Prediction")
+    cb = plt.colorbar()
+    cb.set_label("Height", rotation=270, labelpad=12)
+    plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
+             markeredgecolor='black', label='Trained RBF Centers')
+    plt.legend()
+    plt.show()
+
+    # Plot MSE plots
+    plt.plot(network.mse_record, label='Training MSE')
+    plt.plot(network.validation_mse_record, label='Validation MSE')
+    plt.title("Convergence of MSE")
+    plt.xlabel("Epoch")
+    plt.ylabel("Mean Squared Error")
+    plt.legend()
+    plt.show()
+
+    # Compare different rbf layouts
+    rbf_sides = [1, 2, 3, 4, 5, 6, 7, 8]
+    for rbf_side in rbf_sides:
+        n_rbf = n_rbf_x*n_rbf_y
+        rbf_layout = [(0, 1, rbf_side),
+                      (0, 1, rbf_side)]
+        network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=1000,
+                             learning_rate_start=0.01, learning_rate_end=0.01,
+                             rbf_var=0.1, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
+                             centering='linspace2d', rbf_layout=rbf_layout,
+                             validation_patterns=test_patterns, validation_targets=test_targets)
+        network.fit(train_patterns, train_targets, method='sequential', cl_method='leaky')
+        plt.semilogy(network.validation_mse_record, label='RBF grid side size: {}'.format(rbf_side))
+    plt.title("Comparison of MSE")
+    plt.xlabel("Epoch")
+    plt.ylabel("Mean Squared Error")
     plt.legend()
     plt.show()
 
 
 
-    # x = test_patterns[:, 0]
-    # y = test_patterns[:, 1]
-    # z = test_targets[:, 1]
-    #
-    #
-    # grid_x, grid_y = np.mgrid[0:1:0.001, 0:1:0.001]
-    # grid_x, grid_y = np.meshgrid(np.linspace(0, 1, 200), np.linspace(0, 1, 200))
-    # grid_z = interpolate.griddata((x, y), z, (grid_x, grid_y), method='nearest')
-    # print(grid_z)
-    #
-    # CS = plt.contour(grid_x, grid_y, grid_z, 15, linewidths=0.5, colors='k')
-    # CS = plt.contourf(grid_x, grid_y, grid_z, 15,
-    #                   vmax=abs(grid_z).max(), vmin=-abs(grid_z).max())
-    #
-    # plt.colorbar()  # draw colorbar
-    # plt.show()
 
 
 def test_cl():
@@ -121,12 +170,14 @@ def test_cl():
     n_test = 120
     func = sin2
 
-    network = RBFNetwork(n_inputs=1, n_rbf=n_rbf, n_outputs=1, n_epochs=600,
-                         learning_rate_start=0.1, learning_rate_end=0.1,
-                         rbf_var=0.5, cl_learning_rate=0.01, cl_leak_rate = 0.0001,
-                         min_val=-2, max_val=9)
     train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
         n_train, n_test, func, noise_var=0.01)
+
+    network = RBFNetwork(n_inputs=1, n_rbf=n_rbf, n_outputs=1, n_epochs=600,
+                         learning_rate_start=0.1, learning_rate_end=0.1,
+                         rbf_var=0.5, cl_learning_rate=0.01, cl_leak_rate = 1,
+                         min_val=-2, max_val=9)
+
 
 
 
