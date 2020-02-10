@@ -1,7 +1,7 @@
 import numpy as np
 from hopfield import HopfieldNet
 
-# ======= DATA HANDLING ===========
+# ======= HELPER FUNCTIONS ===========
 
 def get_clean_data():
     patterns = np.array([[-1, -1,  1, -1,  1, -1, -1,  1],
@@ -15,6 +15,21 @@ def get_noisy_data():
                          [ 1,  1, -1, -1, -1,  1, -1, -1],
                          [ 1,  1,  1, -1,  1,  1, -1,  1]])
     return patterns
+
+
+def calc_element_accuracy(patterns, preds):
+    n_total = patterns.shape[0] * patterns.shape[1]
+    n_correct = np.sum(patterns == preds)
+    return n_correct / n_total
+
+
+def calc_sample_accuracy(patterns, preds):
+    n_total = patterns.shape[0]
+    n_correct = 0
+    for pattern, pred in zip(patterns, preds):
+        if (pattern == pred).all():
+            n_correct += 1
+    return n_correct / n_total
 
 
 # ======= TESTING AND PLOTTING ===========
@@ -32,6 +47,8 @@ def test_noise_reduction():
     noisy_preds = net.predict(noisy_patterns)
 
     print(noisy_preds == clean_patterns)
+    print('Element accuracy: {}'.format(calc_element_accuracy(clean_patterns, noisy_preds)))
+    print('Sample accuracy: {}'.format(calc_sample_accuracy(clean_patterns, noisy_preds)))
 
 
 def find_attractors():
@@ -45,11 +62,22 @@ def find_attractors():
 def test_more_noisy():
     """What happens when you make the starting pattern even more dissimilar
        to the stored ones (e.g. more than half is wrong)?"""
-       
-    # TODO: Implement
-    pass
+
+    clean_patterns = get_clean_data()
+    noisy_patterns = np.array([[1,  1, -1,  1,  1, -1, -1,  1],
+                               [1,  1,  1,  1, -1,  1, -1, -1],
+                               [1, -1, -1,  1, -1,  1, -1,  1]])
+
+    net = HopfieldNet()
+    net.fit(clean_patterns)
+    noisy_preds = net.predict(noisy_patterns)
+
+    print(noisy_preds == clean_patterns)
+    print('Element accuracy: {}'.format(calc_element_accuracy(clean_patterns, noisy_preds)))
+    print('Sample accuracy: {}'.format(calc_sample_accuracy(clean_patterns, noisy_preds)))
 
 
 
 if __name__ == '__main__':
     test_noise_reduction()
+    test_more_noisy()
