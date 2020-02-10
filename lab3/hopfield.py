@@ -1,7 +1,7 @@
 import numpy as np
 
 class HopfieldNet:
-    def __init__(self, zero_diagonal=True):
+    def __init__(self, zero_diagonal=False):
         self.w = None
         self.zero_diagonal = zero_diagonal
 
