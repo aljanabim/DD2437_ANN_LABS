@@ -1,9 +1,10 @@
 import numpy as np
 
 class HopfieldNet:
-    def __init__(self, zero_diagonal=False):
+    def __init__(self, zero_diagonal=False, max_iter=100):
         self.w = None
         self.zero_diagonal = zero_diagonal
+        self.max_iter = max_iter
 
     def fit(self, patterns):
         n_patterns = patterns.shape[0]
@@ -19,6 +20,10 @@ class HopfieldNet:
 
     def predict(self, pattern):
         x = np.sign(pattern @ self.w)
+        iter = 0
+        while (x != pattern).any() and (iter < self.max_iter):
+            x = np.sign(x @ self.w)
+            iter += 1
         return x
 
 
