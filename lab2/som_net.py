@@ -4,12 +4,13 @@ from matplotlib import pyplot as plt
 
 class SOMNetwork():
     # 0.08 50 100
-    def __init__(self, n_inputs, n_nodes, step_size=0.2, topology='linear', neighbourhood_start=50, neighbourhood_end=1, n_epochs=120, seed=False):
+    def __init__(self, n_inputs, n_nodes, step_size=0.2, topology='linear', grid_shape=None, neighbourhood_start=50, neighbourhood_end=1, n_epochs=120, seed=False):
         self.n_inputs = n_inputs
         self.n_nodes = n_nodes
         self.n_epochs = n_epochs
         self.step_size = step_size
         self.topology = topology
+        self.grid_shape = grid_shape
         self.neighbourhood = neighbourhood_start
         self.neighbourhood_start = neighbourhood_start
         self.neighbourhood_end = neighbourhood_end
@@ -39,7 +40,8 @@ class SOMNetwork():
         self.data = data
         self.n_data = data.shape[0]
         pos = np.zeros(self.n_data)
-        for epcoh in range(self.n_epochs):
+        for epoch in range(self.n_epochs):
+            print('running epoch ', epoch)
             for data_row_index in range(self.n_data):
                 w_distance = np.linalg.norm(
                     self.w - self.data[data_row_index, :], axis=1)
@@ -96,3 +98,22 @@ class SOMNetwork():
                 self.w[winning_row_index-neighbourhood:winning_row_index+neighbourhood, :] += self.step_size * \
                     (data_row-self.w[winning_row_index -
                                      neighbourhood:winning_row_index+neighbourhood, :])
+
+        if self.topology == 'grid':
+            winning_matrix_row = winning_row_index // self.grid_shape
+            winning_matrix_col = winning_row_index % self.grid_shape
+            winning_point = np.array([winning_matrix_row, winning_matrix_col])
+
+            for data_point_index in range(self.n_inputs):
+                look_at = data_row[data_point_index]
+                weight_as_matrix = self.w[:, data_point_index].reshape(
+                    self.grid_shape)
+                for row in range(weight_as_matrix.shape[0]):
+                    for col in range(weight_as_matrix.shape[1]):
+                        temp_point = np.array([row, col])
+                        if int(round(np.linalg.norm(winning_point-temp_point))) <= neighbourhood:
+                            weight_as_matrix[row, col] += self.step_size * \
+                                (look_at-weight_as_matrix[row, col])
+                self.w[:, data_point_index] = weight_as_matrix.flatten()
+            # Leaky
+            self.w += self.step_size*0.01 * (data_row-self.w)
