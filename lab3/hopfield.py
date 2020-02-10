@@ -1,8 +1,9 @@
 import numpy as np
 
 class HopfieldNet:
-    def __init__(self):
+    def __init__(self, zero_diagonal=True):
         self.w = None
+        self.zero_diagonal = zero_diagonal
 
     def fit(self, patterns):
         n_patterns = patterns.shape[0]
@@ -13,8 +14,11 @@ class HopfieldNet:
             pattern = np.reshape(pattern, (-1, 1))
             self.w += (pattern @ pattern.T)/n_patterns
 
+        if self.zero_diagonal:
+            np.fill_diagonal(self.w, 0)
+
     def predict(self, pattern):
-        x = np.sign((self.w @ pattern))
+        x = np.sign(pattern @ self.w)
         return x
 
 
@@ -29,6 +33,8 @@ def test_basic_hopfield_net():
     assert (patterns[0] == net.predict(patterns[0])).all()
     assert (patterns[1] == net.predict(patterns[1])).all()
     assert (patterns[2] == net.predict(patterns[2])).all()
+    assert (patterns == net.predict(patterns)).all()
+
 
 
 if __name__ == '__main__':
