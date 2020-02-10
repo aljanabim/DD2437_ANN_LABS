@@ -69,8 +69,8 @@ def ballistic():
     n_train = 120
     n_test = 120
     func = sin2
-    n_rbf_x = 8
-    n_rbf_y = 8
+    n_rbf_x = 5
+    n_rbf_y = 5
 
     # Get data
     train_patterns, train_targets, test_patterns, test_targets = get_ballistic_data()
@@ -85,9 +85,9 @@ def ballistic():
                   (0, 1, n_rbf_y)]
 
     # Init model
-    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=50,
+    network = RBFNetwork(n_inputs=2, n_rbf=n_rbf, n_outputs=2, n_epochs=5000,
                          learning_rate_start=0.01, learning_rate_end=0.01,
-                         rbf_var=0.05, cl_learning_rate=0.01, cl_leak_rate = 0.000001,
+                         rbf_var=0.2, cl_learning_rate=0.01, cl_leak_rate = 0.000001,
                          centering='linspace2d', rbf_layout=rbf_layout,
                          validation_patterns=test_patterns, validation_targets=test_targets)
 
@@ -101,11 +101,11 @@ def ballistic():
     # Plot target
     zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
     CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
-    plt.xlabel("Velocity")
-    plt.ylabel("Angle")
-    plt.title("Target")
+    plt.xlabel("Angle")
+    plt.ylabel("Velocity")
+    plt.title("Target distance")
     cb = plt.colorbar()
-    cb.set_label("Height", rotation=270, labelpad=12)
+    cb.set_label("Distance", rotation=270, labelpad=12)
     plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
              markeredgecolor='black', label='Initial RBF Centers')
     plt.legend()
@@ -121,11 +121,11 @@ def ballistic():
     z = train_preds[:,0]
     zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
     CS = plt.contourf(xi,yi,zi,15,cmap=plt.cm.magma)
-    plt.xlabel("Velocity")
-    plt.ylabel("Angle")
-    plt.title("Prediction")
+    plt.xlabel("Angle")
+    plt.ylabel("Velocity")
+    plt.title("Predicted distance")
     cb = plt.colorbar()
-    cb.set_label("Height", rotation=270, labelpad=12)
+    cb.set_label("Distance", rotation=270, labelpad=12)
     plt.plot(network.rbf_centers[:,0], network.rbf_centers[:,1], 'o', markersize=8, color='white', markeredgewidth=1,
              markeredgecolor='black', label='Trained RBF Centers')
     plt.legend()
@@ -141,7 +141,8 @@ def ballistic():
     plt.show()
 
     # Compare different rbf layouts
-    rbf_sides = [1, 2, 3, 4, 5, 6, 7, 8]
+    # rbf_sides = [1, 2, 3, 4, 5, 6, 7, 8]
+    rbf_sides = []
     for rbf_side in rbf_sides:
         n_rbf = n_rbf_x*n_rbf_y
         rbf_layout = [(0, 1, rbf_side),

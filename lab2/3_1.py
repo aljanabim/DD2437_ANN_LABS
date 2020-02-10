@@ -125,10 +125,84 @@ def plot_error(func, MAKE_SQAURE_GREAT=False):
     plt.show()
 
 
+def calc_absolute_error(func, n_rbfs, n_trials=10):
+    n_train = 64
+    n_test = 63
+
+    error_record = []
+    for i in range(n_trials):
+        train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+            n_train, n_test, func)
+        network = RBFNetwork(n_inputs=1, n_rbf=n_rbfs, n_outputs=1, n_epochs=10)
+        network.fit(train_patterns, train_targets)
+        train_preds = network.predict(train_patterns)
+        mean_abs_error = np.mean(np.abs(train_preds - train_targets))
+        error_record.append(mean_abs_error)
+
+    errors = np.array(error_record)
+    return np.mean(errors), np.std(errors)/np.sqrt(len(errors))
+
+
+def plot_mean_abs_error(func, max_n_rbfs, n_trials=10):
+    n_rbfs_list = np.arange(1, max_n_rbfs+1)
+    error_list = []
+    sem_list = []
+    for n_rbfs in n_rbfs_list:
+        error, sem = calc_absolute_error(func, n_rbfs, n_trials)
+        error_list.append(error)
+        sem_list.append(sem)
+
+    ax = plt.subplot(111)
+    ax.set_yscale("log", nonposy='clip')
+    ax.errorbar(n_rbfs_list, error_list, sem_list, label="Mean Absolute Error +- SEM")
+    plt.title("Decay of mean absolute error on square2.\nAverage over {} trials.".format(n_trials))
+    plt.xlabel("Number of RBF units")
+    plt.ylabel("Mean absolute error")
+    plt.legend()
+    plt.show()
+
+
+
+def perfect_square(func):
+    n_train = 64
+    n_test = 63
+    n_rbfs = 4
+
+    train_patterns, train_targets, test_patterns, test_targets = gen_func_data(
+        n_train, n_test, func)
+
+    network = RBFNetwork(n_inputs=1, n_rbf=n_rbfs, n_outputs=1, n_epochs=10)
+    network.rbf_centers = np.array([(1/4)*np.pi,
+                                    (3/4)*np.pi,
+                                    (5/4)*np.pi,
+                                    (7/4)*np.pi])
+    network.fit(train_patterns, train_targets)
+
+    test_preds = network.predict(test_patterns)
+    test_preds_improved = list(map(classifier, network.predict(test_patterns)))
+
+    plt.plot(network.rbf_centers, np.zeros(network.rbf_centers.shape), 'x', color='black', label='RBF centers')
+    plt.plot(test_patterns, test_targets, 's', markersize=8, color='grey', label='Targets')
+    plt.plot(test_patterns, test_preds, 'o', markersize=4, color='steelblue', label='Prediction')
+    plt.plot(test_patterns, test_preds_improved, 'o', markersize=4, color='firebrick', label='Step-transformed prediction')
+    plt.title("Transformed vs non-transformed RBF output")
+    plt.legend()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.show()
+
+
+# plot_mean_abs_error(square, 100, n_trials=10)
+perfect_square(square)
+
 # ALL NEEDED PLOTS
-plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
+# plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
+
 # plot_error(func=square, MAKE_SQAURE_GREAT=False)
 # plot_error(func=square, MAKE_SQAURE_GREAT=True)
+
+
+
 
 
 # plot_prediction(func=sin2)
