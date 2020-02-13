@@ -7,6 +7,7 @@ class HopfieldNet:
         self.zero_diagonal = zero_diagonal
         self.min_iter = min_iter
         self.max_iter = max_iter
+        self.sequential_learning_snapshots = None
 
     def fit(self, patterns):
         patterns = np.array(patterns)
@@ -29,19 +30,32 @@ class HopfieldNet:
         input_pattern = np.array(pattern)
         current_pattern = input_pattern.copy()
         iter = 0
+        self.sequential_learning_snapshots = [] # Used to plot progress
 
         while (((current_pattern != input_pattern).any() and (iter < self.max_iter))
                or (iter < self.min_iter)):
             if method == 'batch':
-                current_pattern = np.sign(current_pattern @ self.w)
+                current_pattern = self._batch_update(current_pattern)
             elif method == 'sequential':
-                node_indexes = np.array(range(0, self.n_inputs))
-                np.random.shuffle(node_indexes)
-                for i in node_indexes:
-                    current_pattern[i] = np.sign(self.w[i, :].dot(current_pattern))
+                current_pattern = self._sequential_update(current_pattern)
             iter += 1
 
         return current_pattern
+
+    def _batch_update(self, pattern):
+        return np.sign(pattern @ self.w)
+
+    def _sequential_update(self, pattern):
+        current_pattern = pattern.copy()
+        node_indexes = np.array(range(0, self.n_inputs))
+        np.random.shuffle(node_indexes)
+        for i in node_indexes:
+            current_pattern[i] = np.sign(self.w[i, :].dot(current_pattern))
+            if (i%100) == 0:
+                self.sequential_learning_snapshots.append(current_pattern.copy())
+        return current_pattern
+
+
 
 
 def test_basic_hopfield_net():
