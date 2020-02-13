@@ -22,11 +22,8 @@ def show_image(image):
 
 
 def calc_element_accuracy(patterns, preds):
-    if len(patterns.shape) == 1:
-        patterns = np.reshape(patterns, (-1, 1))
-
-    n_total = patterns.shape[0] * patterns.shape[1]
-    n_correct = np.sum(patterns == preds)
+    n_total = len(patterns.flatten())
+    n_correct = np.sum(patterns.flatten() == preds.flatten())
     return n_correct / n_total
 
 
@@ -64,6 +61,9 @@ def test_image_recovery():
     recovered_image = net.predict(degraded_image, method='sequential')
     accuracy = calc_element_accuracy(base_image, recovered_image)
 
+    print("Accuracy on degraded data: {}".format(accuracy))
+
+
     plt.subplot(131)
     show_image(base_image)
     plt.subplot(132)
@@ -72,7 +72,6 @@ def test_image_recovery():
     show_image(recovered_image)
     plt.show()
 
-    print("Accuracy on degraded data: ".format(accuracy))
 
 
 
