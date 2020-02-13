@@ -59,9 +59,9 @@ def test_image_recovery():
     base_image = images[0]
     degraded_image = images[9]
 
-    net = HopfieldNet(max_iter=1)
+    net = HopfieldNet(min_iter=1, max_iter=2)
     net.fit(base_image)
-    recovered_image = net.predict(degraded_image)
+    recovered_image = net.predict(degraded_image, method='sequential')
     accuracy = calc_element_accuracy(base_image, recovered_image)
 
     plt.subplot(131)
@@ -90,5 +90,5 @@ def test_show_image():
 
 
 if __name__ == '__main__':
-    stability_check()
+    # stability_check()
     test_image_recovery()

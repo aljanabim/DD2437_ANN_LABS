@@ -1,16 +1,23 @@
 import numpy as np
 
 class HopfieldNet:
-    def __init__(self, zero_diagonal=False, max_iter=100):
+    def __init__(self, zero_diagonal=False, min_iter=1, max_iter=5):
         self.w = None
+        self.n_inputs = None
         self.zero_diagonal = zero_diagonal
+        self.min_iter = min_iter
         self.max_iter = max_iter
 
     def fit(self, patterns):
-        n_patterns = patterns.shape[0]
-        n_inputs = patterns.shape[1]
+        patterns = np.array(patterns)
+        if len(patterns.shape) == 1:
+            patterns = np.reshape(patterns, (1, -1))
 
-        self.w = np.zeros((n_inputs, n_inputs))
+        n_patterns = patterns.shape[0]
+        self.n_inputs = patterns.shape[1]
+
+        self.w = np.zeros((self.n_inputs, self.n_inputs))
+
         for pattern in patterns:
             pattern = np.reshape(pattern, (-1, 1))
             self.w += (pattern @ pattern.T)/n_patterns
@@ -18,13 +25,23 @@ class HopfieldNet:
         if self.zero_diagonal:
             np.fill_diagonal(self.w, 0)
 
-    def predict(self, pattern):
-        x = np.sign(pattern @ self.w)
+    def predict(self, pattern, method='batch'):
+        input_pattern = np.array(pattern)
+        current_pattern = input_pattern.copy()
         iter = 0
-        while (x != pattern).any() and (iter < self.max_iter):
-            x = np.sign(x @ self.w)
+
+        while (((current_pattern != input_pattern).any() and (iter < self.max_iter))
+               or (iter < self.min_iter)):
+            if method == 'batch':
+                current_pattern = np.sign(current_pattern @ self.w)
+            elif method == 'sequential':
+                node_indexes = np.array(range(0, self.n_inputs))
+                np.random.shuffle(node_indexes)
+                for i in node_indexes:
+                    current_pattern[i] = np.sign(self.w[i, :].dot(current_pattern))
             iter += 1
-        return x
+
+        return current_pattern
 
 
 def test_basic_hopfield_net():
