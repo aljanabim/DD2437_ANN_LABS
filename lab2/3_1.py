@@ -135,8 +135,8 @@ def calc_absolute_error(func, n_rbfs, n_trials=10):
             n_train, n_test, func)
         network = RBFNetwork(n_inputs=1, n_rbf=n_rbfs, n_outputs=1, n_epochs=10)
         network.fit(train_patterns, train_targets)
-        train_preds = network.predict(train_patterns)
-        mean_abs_error = np.mean(np.abs(train_preds - train_targets))
+        test_preds = network.predict(test_patterns)
+        mean_abs_error = np.mean(np.abs(test_preds - test_targets))
         error_record.append(mean_abs_error)
 
     errors = np.array(error_record)
@@ -155,7 +155,7 @@ def plot_mean_abs_error(func, max_n_rbfs, n_trials=10):
     ax = plt.subplot(111)
     ax.set_yscale("log", nonposy='clip')
     ax.errorbar(n_rbfs_list, error_list, sem_list, label="Mean Absolute Error +- SEM")
-    plt.title("Decay of mean absolute error on square2.\nAverage over {} trials.".format(n_trials))
+    plt.title("Decay of mean absolute error on sin2.\nAverage over {} trials.".format(n_trials))
     plt.xlabel("Number of RBF units")
     plt.ylabel("Mean absolute error")
     plt.legend()
@@ -192,8 +192,8 @@ def perfect_square(func):
     plt.show()
 
 
-# plot_mean_abs_error(square, 100, n_trials=10)
-perfect_square(square)
+plot_mean_abs_error(square, 80, n_trials=100)
+# perfect_square(square)
 
 # ALL NEEDED PLOTS
 # plot_error(func=sin2, MAKE_SQAURE_GREAT=False)
