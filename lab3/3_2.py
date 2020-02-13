@@ -53,24 +53,48 @@ def stability_check():
 
 def test_image_recovery():
     images = load_data()
-    base_image = images[0]
+    base_images = images[0:3]
     degraded_image = images[9]
 
     net = HopfieldNet(min_iter=1, max_iter=2)
-    net.fit(base_image)
-    recovered_image = net.predict(degraded_image, method='sequential')
-    accuracy = calc_element_accuracy(base_image, recovered_image)
+    net.fit(base_images[0])
+    recovered_image = net.predict(degraded_image, method='batch')
+    accuracy = calc_element_accuracy(base_images[0], recovered_image)
 
     print("Accuracy on degraded data: {}".format(accuracy))
 
 
     plt.subplot(131)
-    show_image(base_image)
+    show_image(base_images[0])
     plt.subplot(132)
     show_image(degraded_image)
     plt.subplot(133)
     show_image(recovered_image)
     plt.show()
+
+
+def test_sequential_updates():
+    images = load_data()
+    base_images = images[0:3]
+    degraded_image = images[9]
+
+    net = HopfieldNet(min_iter=1, max_iter=2)
+    net.fit(base_images[0])
+    recovered_image = net.predict(degraded_image, method='sequential')
+    accuracy = calc_element_accuracy(base_images[0], recovered_image)
+
+    snapshots = net.sequential_learning_snapshots
+    print(len(snapshots))
+    n_subplot_cols = 8
+    n_subplot_rows = len(snapshots)//n_subplot_cols + 1
+    for i, img in enumerate(snapshots):
+        plt.subplot(n_subplot_rows, n_subplot_cols, i+1)
+        plt.title('Iteration {}'.format((i+1)*100))
+        show_image(snapshots[i])
+    plt.tight_layout(pad=3)
+    plt.show()
+
+    print("Accuracy on degraded data: {}".format(accuracy))
 
 
 
@@ -90,4 +114,5 @@ def test_show_image():
 
 if __name__ == '__main__':
     # stability_check()
-    test_image_recovery()
+    # test_image_recovery()
+    test_sequential_updates()
