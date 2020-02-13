@@ -15,8 +15,22 @@ def load_data():
 
 
 def show_image(image):
-        image = np.reshape(image, (32, 32)).T
-        plt.imshow(image)
+    image = np.reshape(image, (32, 32)).T
+    plt.imshow(image)
+
+
+def add_image_noise(image, flip_fraction):
+    """Takes image and return copy with specified fraction of pixels flipped."""
+    image_shape = image.shape
+    new_image = image.copy().flatten()
+    n_pixels = len(new_image)
+    n_noise_pixels = int(flip_fraction*n_pixels)
+    mask = np.zeros(new_image.shape).astype(np.bool)
+    mask[:n_noise_pixels] = True
+    np.random.shuffle(mask)
+    new_image[mask] *= -1
+    new_image = np.reshape(new_image, image_shape)
+    return new_image
 
 
 def calc_element_accuracy(patterns, preds):
