@@ -234,7 +234,7 @@ def plot_centers(func):
 
 # plot_prediction(square)
 # plot_error(sin2)
-# plot_convergence_comparison(sin2)
+plot_convergence_comparison(sin2)
 # final_test_error_comparison(sin2)
 # plot_variance(sin2)
 # plot_variance(square)
