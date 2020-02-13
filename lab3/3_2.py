@@ -68,15 +68,6 @@ def test_sequential_updates():
 
 
 
-
-
-
-
-
-
-
-
-
 def test_show_image():
     images = load_data()
     show_image(images[10])
