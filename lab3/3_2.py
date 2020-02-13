@@ -4,8 +4,9 @@ from hopfield import HopfieldNet
 
 # ============= HELPER FUNCTIONS ===============
 
+
 def load_data():
-    with  open('lab3/data/pict.dat', 'r') as f:
+    with open('./data/pict.dat', 'r') as f:
         text = str(f.read())
         value_list = np.array([int(val) for val in text.split(',')])
         images = []
@@ -17,8 +18,8 @@ def load_data():
 
 
 def show_image(image):
-        image = np.reshape(image, (32, 32)).T
-        plt.imshow(image)
+    image = np.reshape(image, (32, 32)).T
+    plt.imshow(image)
 
 
 def calc_element_accuracy(patterns, preds):
@@ -73,15 +74,6 @@ def test_image_recovery():
     plt.show()
 
     print("Accuracy on degraded data: ".format(accuracy))
-
-
-
-
-
-
-
-
-
 
 
 def test_show_image():
