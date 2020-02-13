@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from hopfield import HopfieldNet
 
 # ======= HELPER FUNCTIONS ===========
@@ -53,10 +54,25 @@ def test_noise_reduction():
 
 def find_attractors():
     """How many attractors are there in this network?
-       Hint: automate the searching."""
+       Hint: automate the searching.
 
-    # TODO: Implement
-    pass
+       2^8 = 256 possible patterns makes brute force searching feasible. This function
+       generates all possible patterns and feeds into the trained net. The predictions are saved,
+       and filtered so that only one copy of each prediction remains. This set should be the full
+       set of attractors."""
+
+    clean_patterns = get_clean_data()
+    net = HopfieldNet()
+    net.fit(clean_patterns)
+
+    preds = []
+    combinations = itertools.product([0,1], repeat=8)
+    for comb in combinations:
+        print(comb)
+        preds.append(net.predict(comb))
+
+    unique_preds = list(set(tuple(x) for x in preds))
+    print("Number of attractors: {}".format(len(list(unique_preds))))
 
 
 def test_more_noisy():
@@ -79,5 +95,6 @@ def test_more_noisy():
 
 
 if __name__ == '__main__':
-    test_noise_reduction()
-    test_more_noisy()
+    find_attractors()
+    # test_noise_reduction()
+    # test_more_noisy()
