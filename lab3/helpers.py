@@ -33,6 +33,10 @@ def add_image_noise(image, flip_fraction):
     return new_image
 
 
+def random_image_pattern(shape, negative_fraction=0.5):
+    return add_image_noise(np.ones(shape), negative_fraction)
+
+
 def calc_element_accuracy(patterns, preds):
     n_total = len(patterns.flatten())
     n_correct = np.sum(patterns.flatten() == preds.flatten())
