@@ -5,4 +5,11 @@ data = np.array([[-1, -1, 1, -1, 1, -1, -1, 1],
                  [-1, -1, -1, -1, -1, 1, -1, -1],
                  [-1, 1, 1, -1, -1, 1, -1, 1]])
 
-print(data)
+data_distorted = np.array([[1, - 1, 1, - 1, 1, - 1, - 1, 1],
+                           [1, 1, - 1, - 1, - 1, 1, - 1, - 1],
+                           [1, 1, 1, - 1, 1, 1, - 1, 1]])
+
+network = HopfieldNetwork()
+network.fit(data)
+print(data[2, :])
+print(network.predict(data[2, :], method="sequential"))

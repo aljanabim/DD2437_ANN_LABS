@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class HopfieldNet:
     def __init__(self, zero_diagonal=False, min_iter=1, max_iter=5):
         self.w = None
@@ -30,7 +31,7 @@ class HopfieldNet:
         input_pattern = np.array(pattern)
         current_pattern = input_pattern.copy()
         iter = 0
-        self.sequential_learning_snapshots = [] # Used to plot progress
+        self.sequential_learning_snapshots = []  # Used to plot progress
 
         while (((current_pattern != input_pattern).any() and (iter < self.max_iter))
                or (iter < self.min_iter)):
@@ -51,11 +52,10 @@ class HopfieldNet:
         np.random.shuffle(node_indexes)
         for i in node_indexes:
             current_pattern[i] = np.sign(self.w[i, :].dot(current_pattern))
-            if (i%100) == 0:
-                self.sequential_learning_snapshots.append(current_pattern.copy())
+            if (i % 100) == 0:
+                self.sequential_learning_snapshots.append(
+                    current_pattern.copy())
         return current_pattern
-
-
 
 
 def test_basic_hopfield_net():
@@ -70,7 +70,6 @@ def test_basic_hopfield_net():
     assert (patterns[1] == net.predict(patterns[1])).all()
     assert (patterns[2] == net.predict(patterns[2])).all()
     assert (patterns == net.predict(patterns)).all()
-
 
 
 if __name__ == '__main__':
