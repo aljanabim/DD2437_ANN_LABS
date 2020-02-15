@@ -56,8 +56,6 @@ class HopfieldNet:
         return current_pattern
 
 
-
-
 def test_basic_hopfield_net():
     patterns = np.array([[-1, -1,  1, -1,  1, -1, -1,  1],
                          [-1, -1, -1, -1, -1,  1, -1, -1],
