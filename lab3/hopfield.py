@@ -40,7 +40,7 @@ class HopfieldNet:
             elif method == 'sequential':
                 current_pattern = self._sequential_update(current_pattern)
             iter += 1
-
+        print(iter)
         return current_pattern
 
     def _batch_update(self, pattern):
