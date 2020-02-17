@@ -19,7 +19,7 @@ def stability_check():
     net.fit(base_images)
     preds = net.predict(base_images)
     accuracy = hl.calc_element_accuracy(base_images, preds)
-    print("Accuracy on training data: ".format(accuracy))
+    print("Accuracy on training data: {}".format(accuracy))
 
 
 def test_image_recovery():
@@ -73,5 +73,8 @@ def test_show_image():
 
 if __name__ == '__main__':
     stability_check()
+    # All stable
     test_image_recovery()
+    # All recovered
     test_sequential_updates()
+    # See plot

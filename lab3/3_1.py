@@ -46,8 +46,8 @@ def test_noise_reduction():
     net = HopfieldNet()
     net.fit(clean_patterns)
     noisy_preds = net.predict(noisy_patterns)
+    print(noisy_preds)
 
-    print(noisy_preds == clean_patterns)
     print('Element accuracy: {}'.format(calc_element_accuracy(clean_patterns, noisy_preds)))
     print('Sample accuracy: {}'.format(calc_sample_accuracy(clean_patterns, noisy_preds)))
 
@@ -68,7 +68,6 @@ def find_attractors():
     preds = []
     combinations = itertools.product([0,1], repeat=8)
     for comb in combinations:
-        print(comb)
         preds.append(net.predict(comb))
 
     unique_preds = list(set(tuple(x) for x in preds))
@@ -84,17 +83,22 @@ def test_more_noisy():
                                [1,  1,  1,  1, -1,  1, -1, -1],
                                [1, -1, -1,  1, -1,  1, -1,  1]])
 
-    net = HopfieldNet()
+    net = HopfieldNet(min_iter=1, max_iter=5)
     net.fit(clean_patterns)
     noisy_preds = net.predict(noisy_patterns)
 
-    print(noisy_preds == clean_patterns)
     print('Element accuracy: {}'.format(calc_element_accuracy(clean_patterns, noisy_preds)))
     print('Sample accuracy: {}'.format(calc_sample_accuracy(clean_patterns, noisy_preds)))
 
 
 
 if __name__ == '__main__':
+    print("----Test little noise----")
+    test_noise_reduction()
+    # 2 of 3 converged correctly to stored pattern, one converged to incorrect pattern
+    print("----Find attractors----")
     find_attractors()
-    # test_noise_reduction()
-    # test_more_noisy()
+    # 11 attractors
+    print("----Test more noise----")
+    test_more_noisy()
+    # no converge to correct

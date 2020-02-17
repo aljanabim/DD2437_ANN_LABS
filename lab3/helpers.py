@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def load_data():
-    with open('./data/pict.dat', 'r') as f:
+    with open('lab3/data/pict.dat', 'r') as f:
         text = str(f.read())
         value_list = np.array([int(val) for val in text.split(',')])
         images = []
