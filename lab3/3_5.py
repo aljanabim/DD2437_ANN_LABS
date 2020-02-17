@@ -35,18 +35,19 @@ def test_storage_capacity():
     images = hl.load_data()
     image_shape = images[0].shape
 
-    image_accuracy_list = benchmark_on_images(net, images[0:max_n_images], flip_fraction=0.1)
+    image_accuracy_list = benchmark_on_images(net, images[0:max_n_images], flip_fraction=flip_fraction)
 
     """Try to repeat this with learning a few random patterns instead of the
        pictures and see if you can store more."""
 
-    randoms =  [hl.random_image_pattern(image_shape, 0.05) for _ in range(max_n_images)]
-    random_accuracy_list = benchmark_on_images(net, randoms, flip_fraction=0.2)
+    randoms =  [hl.random_image_pattern(image_shape, 0.5) for _ in range(max_n_images)]
+    random_accuracy_list = benchmark_on_images(net, randoms, flip_fraction=flip_fraction)
 
     plt.plot(image_accuracy_list, label="Images")
-    plt.plot(random_accuracy_list, label="Random patterns")
+    plt.plot(random_accuracy_list, label="Random patterns, unbiased")
     plt.xlabel("Number of stored images")
     plt.ylabel("Imagewise accuracy")
+    plt.title("Storage capacity test, flip fraction = {}".format(flip_fraction))
     plt.legend()
     plt.show()
 
@@ -60,7 +61,7 @@ def test_storage_capacity():
 
 def memory_limit_test():
     pattern_shape = (100,)
-    max_n_patterns = 10
+    max_n_patterns = 300
     force_zero_diagonal = True
 
     net = HopfieldNet(zero_diagonal=force_zero_diagonal, min_iter=1, max_iter=5)
@@ -70,7 +71,7 @@ def memory_limit_test():
     n_noise_stable_list = []
     patterns = []
     for n_patterns in range(max_n_patterns):
-        patterns.append(hl.random_image_pattern(pattern_shape, 0.5))
+        patterns.append(hl.random_image_pattern(pattern_shape, 0.3))
         net.fit(patterns)
         n_stable = 0
         n_noise_stable = 0
@@ -84,7 +85,7 @@ def memory_limit_test():
             if (noisy_pred == pattern).all():
                 n_noise_stable += 1
 
-        n_patterns_list.append(n_patterns)
+        n_patterns_list.append(n_patterns+1)
         n_stable_list.append(n_stable)
         n_noise_stable_list.append(n_noise_stable)
 
@@ -92,11 +93,11 @@ def memory_limit_test():
     plt.plot(n_patterns_list, n_noise_stable_list, label="Noisy patterns (10 iterations)")
     plt.legend()
     if net.zero_diagonal:
-        plt.title("Stability and convergence analysis with zero-diagonal")
+        plt.title("Stability and convergence analysis with zero-diagonal\n(biased patterns)")
     else:
         plt.title("Stability and convergence analysis")
     plt.xlabel("Number of patterns")
-    plt.ylabel("Number of converged patterns")
+    plt.ylabel("Correct convergence")
     plt.show()
 
     """Plot indicates that the network has many critical points, but these are very unstable."""
