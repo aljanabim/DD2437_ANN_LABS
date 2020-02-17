@@ -34,7 +34,6 @@ def test_image_recovery():
 
     print("Accuracy on degraded data: {}".format(accuracy))
 
-
     plt.subplot(131)
     hl.show_image(base_images[0])
     plt.subplot(132)
@@ -65,7 +64,6 @@ def test_sequential_updates():
     plt.show()
 
     print("Accuracy on degraded data: {}".format(accuracy))
-
 
 
 def test_show_image():

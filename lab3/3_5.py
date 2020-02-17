@@ -14,7 +14,8 @@ def benchmark_on_images(net, images, flip_fraction=0.2):
         net.fit(selected_images)
         preds = []
         for image in selected_images:
-            distorted_image = hl.add_image_noise(image, flip_fraction=flip_fraction)
+            distorted_image = hl.add_image_noise(
+                image, flip_fraction=flip_fraction)
             preds.append(net.predict(distorted_image, 'sequential'))
         preds = np.array(preds)
 
@@ -29,18 +30,19 @@ def test_storage_capacity():
     max_n_images = 7
     flip_fraction = 0.1
 
-
     net = HopfieldNet(min_iter=1, max_iter=5)
 
     images = hl.load_data()
     image_shape = images[0].shape
 
-    image_accuracy_list = benchmark_on_images(net, images[0:max_n_images], flip_fraction=0.1)
+    image_accuracy_list = benchmark_on_images(
+        net, images[0:max_n_images], flip_fraction=0.1)
 
     """Try to repeat this with learning a few random patterns instead of the
        pictures and see if you can store more."""
 
-    randoms =  [hl.random_image_pattern(image_shape, 0.05) for _ in range(max_n_images)]
+    randoms = [hl.random_image_pattern(image_shape, 0.05)
+               for _ in range(max_n_images)]
     random_accuracy_list = benchmark_on_images(net, randoms, flip_fraction=0.2)
 
     plt.plot(image_accuracy_list, label="Images")
@@ -63,7 +65,8 @@ def memory_limit_test():
     max_n_patterns = 10
     force_zero_diagonal = True
 
-    net = HopfieldNet(zero_diagonal=force_zero_diagonal, min_iter=1, max_iter=5)
+    net = HopfieldNet(zero_diagonal=force_zero_diagonal,
+                      min_iter=1, max_iter=5)
 
     n_patterns_list = []
     n_stable_list = []
@@ -89,7 +92,8 @@ def memory_limit_test():
         n_noise_stable_list.append(n_noise_stable)
 
     plt.plot(n_patterns_list, n_stable_list, label="Clean patterns")
-    plt.plot(n_patterns_list, n_noise_stable_list, label="Noisy patterns (10 iterations)")
+    plt.plot(n_patterns_list, n_noise_stable_list,
+             label="Noisy patterns (10 iterations)")
     plt.legend()
     if net.zero_diagonal:
         plt.title("Stability and convergence analysis with zero-diagonal")
@@ -100,9 +104,6 @@ def memory_limit_test():
     plt.show()
 
     """Plot indicates that the network has many critical points, but these are very unstable."""
-
-
-
 
 
 if __name__ == '__main__':
