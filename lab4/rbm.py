@@ -79,6 +79,13 @@ class RestrictedBoltzmannMachine():
         
         n_samples = visible_trainset.shape[0]
 
+        # TASK 4.1 Here you will create a Restricted Boltzmann Machine, implement the inference rules, and learn the parameters with contrastive divergence. You would have to work on the following functions :
+
+        #  rbm.cd1()   	   	   contrastive-divergence method for computing the gradients of the parameters
+        #  rbm.update_params()	   updates the parameters from the gradients 
+        #  rbm.get_v_given_h()	   computes the visible probabilities and activations samples given hidden activations
+        #  rbm.get_h_given_v()	   computes the hidden probabilities and activations samples given visible activations
+
         for it in range(n_iterations):
 
 	    # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
