@@ -78,23 +78,22 @@ class RestrictedBoltzmannMachine():
         print ("learning CD1")
 
         n_samples = visible_trainset.shape[0]
+        n_minibatches = int(n_samples/self.batch_size + 0.5)
 
-	    # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
-            # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
-            # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
+        minibatch_folds = np.array((list(range(n_minibatches))*self.batch_size)[:n_samples])
+        np.random.shuffle(minibatch_folds)
 
-            # [TODO TASK 4.1] update the parameters using function 'update_params'
-            
-            # visualize once in a while when visible layer is input images
         for it in range(n_iterations):
-            # subsample = np.random.randint(0,n_samples,self.batch_size)
-            v_activations_0 = visible_trainset
-            h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
-            v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
-            h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
-            # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
-            # self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
-            # [TODO TASK 4.1] update the parameters using function 'update_params'
+            for fold_index in range(n_minibatches):
+                minibatch = visible_trainset[minibatch_folds == fold_index]
+                v_activations_0 = minibatch
+                h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
+                v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
+                h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
+
+                # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
+                # self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
+                # [TODO TASK 4.1] update the parameters using function 'update_params'
 
             if it % self.rf["period"] == 0 and self.is_bottom:
 
@@ -152,8 +151,8 @@ class RestrictedBoltzmannMachine():
         assert self.weight_vh is not None
 
         n_samples = visible_minibatch.shape[0]
-        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below) 
-        
+        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
+
         output_shape = (n_samples,self.ndim_hidden)
         h_given_v_prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
         h_given_v_activation = sample_binary(h_given_v_prob)
