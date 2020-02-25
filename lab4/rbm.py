@@ -63,6 +63,8 @@ class RestrictedBoltzmannMachine():
             "ids" : np.random.randint(0,self.ndim_hidden,25) # pick some random hidden units
             }
 
+
+        self.max_n_minibatches = 10
         return
 
 
@@ -85,6 +87,8 @@ class RestrictedBoltzmannMachine():
 
         for it in range(n_iterations):
             for fold_index in range(n_minibatches):
+                if fold_index > self.max_n_minibatches:
+                    break
                 minibatch = visible_trainset[minibatch_folds == fold_index]
                 v_activations_0 = minibatch
                 h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
