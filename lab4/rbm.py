@@ -86,25 +86,33 @@ class RestrictedBoltzmannMachine():
             # [TODO TASK 4.1] update the parameters using function 'update_params'
             
             # visualize once in a while when visible layer is input images
+        start_range=0
+        n_batches = int(n_samples/self.batch_size)
+
+        range_inc = int(round(n_samples/self.batch_size))
         for it in range(n_iterations):
-            # subsample = np.random.randint(0,n_samples,self.batch_size)
-            v_activations_0 = visible_trainset
-            h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
-            v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
-            h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
-            # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
-            # self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
-            # [TODO TASK 4.1] update the parameters using function 'update_params'
+            print("Iteration", it)
+            for batch in range(1,n_batches):
+                subsample = np.random.randint(0,n_samples,self.batch_size)
+                v_activations_0 = visible_trainset[it*batch:(it+1)*batch]
+                h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
+                v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
+                h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
+                self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
+                
+                
+                # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
+                # [TODO TASK 4.1] update the parameters using function 'update_params'
 
-            if it % self.rf["period"] == 0 and self.is_bottom:
+                if it % self.rf["period"] == 0 and self.is_bottom:
 
-                viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
+                    viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
-            # print progress
+                # print progress
 
-            if it % self.print_period == 0 :
+                # if it % self.print_period == 0 :
 
-                print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
+                    # print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
 
         return
 
@@ -124,10 +132,11 @@ class RestrictedBoltzmannMachine():
         """
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
+        n_samples = v_0.shape[0]
 
-        self.delta_bias_v =0
-        self.delta_weight_vh = 0
-        self.delta_bias_h = 0
+        self.delta_bias_v = np.mean(v_0-v_k,axis=0)
+        self.delta_weight_vh = (np.dot(h_0.T,v_0).T-np.dot(h_k.T,v_k).T)/n_samples
+        self.delta_bias_h = np.mean(h_0-h_k,axis=0)
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
