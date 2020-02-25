@@ -79,6 +79,8 @@ class RestrictedBoltzmannMachine():
 
         n_samples = visible_trainset.shape[0]
 
+
+
         for it in range(n_iterations):
             minibatch_idx = np.random.randint(0, n_samples, self.batch_size)
 
@@ -88,6 +90,8 @@ class RestrictedBoltzmannMachine():
             h_probs_1, h_activations_1 = self.get_h_given_v(v_activations_1)
 
             # [TODO TASK 4.1] update the parameters using function 'update_params'
+
+            # visualize once in a while when visible layer is input images
 
             if it % self.rf["period"] == 0 and self.is_bottom:
 
@@ -147,7 +151,7 @@ class RestrictedBoltzmannMachine():
 
         return_shape = (n_samples, self.ndim_hidden)
 
-        h_probs = self.sigmoid(self.bias_h +  visible_minibatch @ self.weight_vh)
+        h_probs = self.sigmoid(self.bias_h.T +  visible_minibatch @ self.weight_vh)
         h_activations = (np.random.random(return_shape) < h_probs)
 
         return h_probs, h_activations
@@ -179,14 +183,14 @@ class RestrictedBoltzmannMachine():
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
 
-            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
+            # [TODO TASK 4.2] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
 
             pass
 
         else:
 
-            #n_samples = hidden_minibatch.shape[0]
+            n_samples = hidden_minibatch.shape[0]
 
             return_shape = (n_samples, self.ndim_visible)
 
@@ -201,12 +205,12 @@ class RestrictedBoltzmannMachine():
     """ rbm as a belief layer : the functions below do not have to be changed until running a deep belief net """
 
 
-
     def untwine_weights(self):
 
         self.weight_v_to_h = np.copy( self.weight_vh )
         self.weight_h_to_v = np.copy( np.transpose(self.weight_vh) )
         self.weight_vh = None
+
 
     def get_h_given_v_dir(self,visible_minibatch):
 
@@ -312,3 +316,7 @@ class RestrictedBoltzmannMachine():
         self.bias_h += self.delta_bias_h
 
         return
+
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))

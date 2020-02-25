@@ -151,7 +151,7 @@ class RestrictedBoltzmannMachine():
 
         return_shape = (n_samples, self.ndim_hidden)
 
-        h_probs = self.sigmoid(self.bias_h.T +  visible_minibatch @ self.weight_vh)
+        h_probs = self.sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
         h_activations = (np.random.random(return_shape) < h_probs)
 
         return h_probs, h_activations
