@@ -83,14 +83,11 @@ class RestrictedBoltzmannMachine():
 
         for it in range(n_iterations):
             minibatch_idx = np.random.randint(0, n_samples, self.batch_size)
-            minibatch = visible_trainset[minibatch_index]
 
-            h_probs, h_activations = self.get_h_given_v(visible_trainset[minibatch_idx])
-            self.get_v_given_h(h_activations)
-
-	    # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
-            # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
-            # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
+            v_activations_0 = visible_trainset[minibatch_idx]
+            h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
+            v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
+            h_probs_1, h_activations_1 = self.get_h_given_v(v_activations_1)
 
             # [TODO TASK 4.1] update the parameters using function 'update_params'
 
@@ -154,7 +151,7 @@ class RestrictedBoltzmannMachine():
 
         return_shape = (n_samples, self.ndim_hidden)
 
-        h_probs = self.sigmoid(self.bias_h.T +  visible_minibatch @ self.weight_vh)
+        h_probs = self.sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
         h_activations = (np.random.random(return_shape) < h_probs)
 
         return h_probs, h_activations
@@ -192,8 +189,6 @@ class RestrictedBoltzmannMachine():
             pass
 
         else:
-
-            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)
 
             n_samples = hidden_minibatch.shape[0]
 
