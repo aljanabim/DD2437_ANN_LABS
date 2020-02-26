@@ -57,7 +57,7 @@ class RestrictedBoltzmannMachine():
 
         self.momentum = 0.7
 
-        self.print_period = 5000
+        self.print_period = 5
 
         self.rf = { # receptive-fields. Only applicable when visible layer is input data
             "period" : 5, #5000, # iteration period to visualize
@@ -79,7 +79,7 @@ class RestrictedBoltzmannMachine():
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
         print ("learning CD1")
-        visible_trainset = visible_trainset[:500]
+        visible_trainset = visible_trainset[:1000]
         n_samples = visible_trainset.shape[0]
         n_minibatches = int(n_samples/self.batch_size + 0.5)
 
@@ -98,24 +98,27 @@ class RestrictedBoltzmannMachine():
                 v_probs_1, _ = self.get_v_given_h(h_activations_0, sample=False)
                 h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
 
+<<<<<<< HEAD
                 self.update_params(v_0=v_activations_0,
                                    h_0=h_activations_0,
                                    v_k=v_activations_1,
                                    h_k=h_activations_1)
 
                 # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
+=======
+>>>>>>> b87e49abaf59195974cd3e6e5da03141ffb1572e
                 self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
-                # [TODO TASK 4.1] update the parameters using function 'update_params'
 
-                if it % self.rf["period"] == 0 and self.is_bottom:
+            if it % self.rf["period"] == 0 and self.is_bottom:
 
-                    viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
+                viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
-                # print progress
+            # print progress
 
-                # if it % self.print_period == 0 :
-
-                    # print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
+            if it % self.print_period == 0 :
+                forward_pass,_ = self.get_h_given_v(visible_trainset)
+                reconstruction,_ = self.get_v_given_h(forward_pass)
+                print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - reconstruction)))
 
         return
 
