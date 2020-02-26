@@ -58,7 +58,7 @@ class RestrictedBoltzmannMachine():
         self.print_period = 5000
 
         self.rf = { # receptive-fields. Only applicable when visible layer is input data
-            "period" : 5000, # iteration period to visualize
+            "period" : 5, #5000, # iteration period to visualize
             "grid" : [5,5], # size of the grid
             "ids" : np.random.randint(0,self.ndim_hidden,25) # pick some random hidden units
             }
@@ -76,7 +76,7 @@ class RestrictedBoltzmannMachine():
         """
 
         print ("learning CD1")
-
+        visible_trainset = visible_trainset[:500]
         n_samples = visible_trainset.shape[0]
         n_minibatches = int(n_samples/self.batch_size + 0.5)
 
@@ -84,15 +84,17 @@ class RestrictedBoltzmannMachine():
         np.random.shuffle(minibatch_folds)
 
         for it in range(n_iterations):
+            print("Iterations", it)
             for fold_index in range(n_minibatches):
                 minibatch = visible_trainset[minibatch_folds == fold_index]
                 v_activations_0 = minibatch
+
                 h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
                 v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
                 h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
 
                 # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
-                # self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
+                self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
 
                 if it % self.rf["period"] == 0 and self.is_bottom:
