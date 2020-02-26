@@ -11,7 +11,6 @@ if __name__ == "__main__":
     ''' restricted boltzmann machine '''
 
     print("\nStarting a Restricted Boltzmann Machine..")
-    print(test_lbls.shape)
     rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
                                      ndim_hidden=500,
                                      is_bottom=True,
