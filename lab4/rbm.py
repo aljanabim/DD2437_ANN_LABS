@@ -101,6 +101,15 @@ class RestrictedBoltzmannMachine():
                 v_probs_1, _ = self.get_v_given_h(h_activations_0, sample=False)
                 h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
 
+<<<<<<< HEAD
+                self.update_params(v_0=v_activations_0,
+                                   h_0=h_activations_0,
+                                   v_k=v_activations_1,
+                                   h_k=h_activations_1)
+
+                # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
+=======
+>>>>>>> b87e49abaf59195974cd3e6e5da03141ffb1572e
                 self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
             
             
@@ -178,11 +187,20 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         output_shape = (n_samples,self.ndim_hidden)
+<<<<<<< HEAD
+        h_given_v_prob = sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
+        h_given_v_activation = sample_binary(h_given_v_prob)
+
+        assert h_given_v_prob.shape == output_shape
+        assert h_given_v_activation.shape == output_shape
+
+=======
         h_given_v_prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
         if sample:
             h_given_v_activation = sample_binary(h_given_v_prob)
         else:
             h_given_v_activation = 0  
+>>>>>>> 4a17c039de296d53591dd06b480bf09dd7a4369f
         return h_given_v_prob, h_given_v_activation
 
     def get_v_given_h(self,hidden_minibatch, sample=True):
@@ -214,11 +232,17 @@ class RestrictedBoltzmannMachine():
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
 
+            return_shape = (n_samples, self.ndim_visible)
+
+            v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
+            v_probs_pen = v_probs[:, :-self.n_labels]
+            v_probs_lbl = v_probs[:, -self.n_labels:]
+            v_activations = (np.random.random(return_shape) < v_probs)
+
             pass
 
         else:
             return_shape = (n_samples, self.ndim_visible)
-
             v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             if sample:
                 v_activations = (np.random.random(return_shape) < v_probs)
@@ -255,9 +279,13 @@ class RestrictedBoltzmannMachine():
 
         n_samples = visible_minibatch.shape[0]
 
+        output_shape = (n_samples,self.ndim_hidden)
+        h_probs = sigmoid(self.bias_h + visible_minibatch @ self.weight_v_to_h)
+        h_activations = sample_binary(h_probs)
+
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
 
-        return np.zeros((n_samples,self.ndim_hidden)), np.zeros((n_samples,self.ndim_hidden))
+        return h_probs, h_activations
 
 
     def get_v_given_h_dir(self,hidden_minibatch):
@@ -291,15 +319,18 @@ class RestrictedBoltzmannMachine():
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
 
+            raise Error("Should never be called when on top")
+
             pass
 
         else:
 
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
+            output_shape = (n_samples, self.ndim_visible)
+            v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
+            v_activations = (np.random.random(return_shape) < v_probs)
 
-            pass
-
-        return np.zeros((n_samples,self.ndim_visible)), np.zeros((n_samples,self.ndim_visible))
+        return v_probs, v_activations
 
     def update_generate_params(self,inps,trgs,preds):
 

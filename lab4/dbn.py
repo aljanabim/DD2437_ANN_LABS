@@ -100,14 +100,26 @@ class DeepBeliefNet():
         ax.set_xticks([]); ax.set_yticks([])
 
         lbl = true_lbl
+        pen = np.random.normal(0, 0.1, self.sizes["pen"])
+        pen_plus_lbl = np.concatenate(pen, lbl)
+        top_v_activations = np.reshape(pen_plus_lbl, (1, -1))
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM.
         # From the top RBM, drive the network \
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
 
-        for _ in range(self.n_gibbs_gener):
 
-            vis = np.random.rand(n_sample,self.sizes["vis"])
+
+        for _ in range(self.n_gibbs_gener):
+            pen_h_probs, pen_h_activations = self.rbm_stack["pen+lbl--top"].get_h_given_v(top_v_activations)
+            pen_v_probs, pen_v_activations = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_h_activations)
+
+            hid_h_activations = pen_v_activations[:, :self.sizes["pen"]]
+            hid_v_probs, hid_v_activations = self.rbm_stack["hid--pen"].get_h_given_v_dir(top_v_activations)
+
+            vis_v_probs, vis_v_activations = self.rbm_stack["vis--hid"].get_h_given_v_dir(hid_v_activations)
+
+            vis = vis_v_activations
 
             records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
 
@@ -139,13 +151,12 @@ class DeepBeliefNet():
             self.loadfromfile_rbm(loc="trained_rbm",name="pen+lbl--top")
 
         except IOError :
-
-            # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
-
             print ("training vis--hid")
             """
             CD-1 training for vis--hid
             """
+            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations=10)
+            hid_probs, hid_set = self.rbm_stack["vis--hid"].get_h_given_v(vis_trainset)
             self.savetofile_rbm(loc="trained_rbm",name="vis--hid")
 
             print ("training hid--pen")
@@ -153,6 +164,8 @@ class DeepBeliefNet():
             """
             CD-1 training for hid--pen
             """
+            self.rbm_stack["hid--pen"].cd1(hid_set, n_iterations=10)
+            pen_probs, pen_set = self.rbm_stack["hid--pen"].get_h_given_v(hid_set)
             self.savetofile_rbm(loc="trained_rbm",name="hid--pen")
 
             print ("training pen+lbl--top")
@@ -160,6 +173,8 @@ class DeepBeliefNet():
             """
             CD-1 training for pen+lbl--top
             """
+            pen_plus_lbl_set = np.concatenate((pen_set, lbl_trainset), axis=1)
+            self.rbm_stack["pen+lbl--top"].cd1(pen_plus_lbl_set, n_iterations=10)
             self.savetofile_rbm(loc="trained_rbm",name="pen+lbl--top")
 
         return
