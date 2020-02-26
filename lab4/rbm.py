@@ -1,10 +1,12 @@
 from util import *
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 class RestrictedBoltzmannMachine():
     '''
     For more details : A Practical Guide to Training Restricted Boltzmann Machines https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf
     '''
-    def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28,28], is_top=False, n_labels=10, batch_size=10):
+    def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28,28], is_top=False, n_labels=10, batch_size=10, task=None):
 
         """
         Args:
@@ -58,7 +60,7 @@ class RestrictedBoltzmannMachine():
         self.print_period = 5000
 
         self.rf = { # receptive-fields. Only applicable when visible layer is input data
-            "period" : 5000, # iteration period to visualize
+            "period" : 5, #5000, # iteration period to visualize
             "grid" : [5,5], # size of the grid
             "ids" : np.random.randint(0,self.ndim_hidden,25) # pick some random hidden units
             }
@@ -76,23 +78,24 @@ class RestrictedBoltzmannMachine():
           visible_trainset: training data for this rbm, shape is (size of training set, size of visible layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-
         print ("learning CD1")
-
+        visible_trainset = visible_trainset[:500]
         n_samples = visible_trainset.shape[0]
         n_minibatches = int(n_samples/self.batch_size + 0.5)
 
         minibatch_folds = np.array((list(range(n_minibatches))*self.batch_size)[:n_samples])
-        np.random.shuffle(minibatch_folds)
 
         for it in range(n_iterations):
+            np.random.shuffle(minibatch_folds)
+            print("Iterations", it)
             for fold_index in range(n_minibatches):
                 if fold_index > self.max_n_minibatches:
                     break
                 minibatch = visible_trainset[minibatch_folds == fold_index]
-                v_activations_0 = minibatch
+
+                v_activations_0 = minibatch # could also make it binary but on quick testing it seemed not a good idea.
                 h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
-                v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
+                v_probs_1, _ = self.get_v_given_h(h_activations_0, sample=False)
                 h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
 
                 self.update_params(v_0=v_activations_0,
@@ -101,7 +104,7 @@ class RestrictedBoltzmannMachine():
                                    h_k=h_activations_1)
 
                 # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
-                # self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
+                self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
 
                 if it % self.rf["period"] == 0 and self.is_bottom:
@@ -144,7 +147,8 @@ class RestrictedBoltzmannMachine():
 
         return
 
-    def get_h_given_v(self,visible_minibatch):
+    def get_h_given_v(self,visible_minibatch, sample=True):
+        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
 
         """Compute probabilities p(h|v) and activations h ~ p(h|v)
 
@@ -157,23 +161,26 @@ class RestrictedBoltzmannMachine():
            both are shaped (size of mini-batch, size of hidden layer)
         """
 
-
-        assert self.weight_vh is not None
-
         n_samples = visible_minibatch.shape[0]
-        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
 
         output_shape = (n_samples,self.ndim_hidden)
+<<<<<<< HEAD
         h_given_v_prob = sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
         h_given_v_activation = sample_binary(h_given_v_prob)
 
         assert h_given_v_prob.shape == output_shape
         assert h_given_v_activation.shape == output_shape
 
+=======
+        h_given_v_prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
+        if sample:
+            h_given_v_activation = sample_binary(h_given_v_prob)
+        else:
+            h_given_v_activation = 0  
+>>>>>>> 4a17c039de296d53591dd06b480bf09dd7a4369f
         return h_given_v_prob, h_given_v_activation
 
-
-    def get_v_given_h(self,hidden_minibatch):
+    def get_v_given_h(self,hidden_minibatch, sample=True):
 
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
 
@@ -214,7 +221,9 @@ class RestrictedBoltzmannMachine():
         else:
             return_shape = (n_samples, self.ndim_visible)
             v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
-            v_activations = (np.random.random(return_shape) < v_probs)
+            if sample:
+                v_activations = (np.random.random(return_shape) < v_probs)
+            else: v_activations=0
 
         return v_probs, v_activations
 
