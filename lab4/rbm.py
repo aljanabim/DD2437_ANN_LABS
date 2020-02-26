@@ -58,7 +58,7 @@ class RestrictedBoltzmannMachine():
 
         self.momentum = 0.7
 
-        self.print_period = 3
+        self.print_period = 5
 
         self.rf = { # receptive-fields. Only applicable when visible layer is input data
             "period" : 5, #5000, # iteration period to visualize
@@ -101,26 +101,17 @@ class RestrictedBoltzmannMachine():
                 v_probs_1, _ = self.get_v_given_h(h_activations_0, sample=False)
                 h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
 
-<<<<<<< HEAD
-                self.update_params(v_0=v_activations_0,
-                                   h_0=h_activations_0,
-                                   v_k=v_activations_1,
-                                   h_k=h_activations_1)
-
-                # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
-=======
->>>>>>> b87e49abaf59195974cd3e6e5da03141ffb1572e
                 self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
+
             
-            
-            Generate reconstructed images
+            # Generate reconstructed images
             if it % self.rf["period"] == 0 and self.is_bottom:
                 viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
 
             # print progress
-            # if it % self.print_period == 0:
-            #     self.get_reconstruction_loss(it, visible_trainset)
+            if it % self.print_period == 0:
+                self.get_reconstruction_loss(it, visible_trainset)
             # if it+1 == n_iterations:
             # self.get_reconstruction_loss(it, visible_trainset)
 
@@ -187,20 +178,11 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         output_shape = (n_samples,self.ndim_hidden)
-<<<<<<< HEAD
-        h_given_v_prob = sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
-        h_given_v_activation = sample_binary(h_given_v_prob)
-
-        assert h_given_v_prob.shape == output_shape
-        assert h_given_v_activation.shape == output_shape
-
-=======
         h_given_v_prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
         if sample:
             h_given_v_activation = sample_binary(h_given_v_prob)
         else:
             h_given_v_activation = 0  
->>>>>>> 4a17c039de296d53591dd06b480bf09dd7a4369f
         return h_given_v_prob, h_given_v_activation
 
     def get_v_given_h(self,hidden_minibatch, sample=True):

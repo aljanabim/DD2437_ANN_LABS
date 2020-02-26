@@ -26,7 +26,7 @@ def plot_recon_error():
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(dim=image_size, n_train=60000, n_test=10000)
 
-    try_range = range(n_hidden_min,n_hidden_max+1,100)
+    try_range = range(n_hidden_min,n_hidden_max+1,10)
     avg_recon_error = np.zeros(len(try_range))
     all_recon_error = list(try_range)
     x_labels = list(try_range)
@@ -42,8 +42,9 @@ def plot_recon_error():
                                     n_labels=10,
                                     batch_size=20)
         recon_loss, _ = rbm.cd1(visible_trainset=train_imgs, n_iterations=epochs)
+        print(recon_loss)
         all_recon_error[i] = np.copy(recon_loss)
-        avg_recon_error[i] = np.mean(recon_loss)
+        avg_recon_error[i] = recon_loss[-1]
         i +=1
     if PLOT_TYPE == 1:
         plt.plot(x_labels,avg_recon_error, 'o')
@@ -109,7 +110,7 @@ def plot_weight_stability():
     plt.show()
 
 if __name__ == "__main__":
-    # plot_recon_error()
+    plot_recon_error()
     # plot_weight_stability()
 
     # image_size = [28, 28]
