@@ -1,4 +1,6 @@
 from util import *
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 class RestrictedBoltzmannMachine():
     '''
@@ -76,25 +78,24 @@ class RestrictedBoltzmannMachine():
           visible_trainset: training data for this rbm, shape is (size of training set, size of visible layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-
         print ("learning CD1")
         visible_trainset = visible_trainset[:500]
         n_samples = visible_trainset.shape[0]
         n_minibatches = int(n_samples/self.batch_size + 0.5)
 
         minibatch_folds = np.array((list(range(n_minibatches))*self.batch_size)[:n_samples])
-        np.random.shuffle(minibatch_folds)
 
         for it in range(n_iterations):
+            np.random.shuffle(minibatch_folds)
             print("Iterations", it)
             for fold_index in range(n_minibatches):
                 if fold_index > self.max_n_minibatches:
                     break
                 minibatch = visible_trainset[minibatch_folds == fold_index]
-                v_activations_0 = minibatch
 
+                v_activations_0 = minibatch # could also make it binary but on quick testing it seemed not a good idea.
                 h_probs_0, h_activations_0 = self.get_h_given_v(v_activations_0)
-                v_probs_1, v_activations_1 = self.get_v_given_h(h_activations_0)
+                v_probs_1, _ = self.get_v_given_h(h_activations_0, sample=False)
                 h_probs_1, h_activations_1 = self.get_h_given_v(v_probs_1)
 
                 # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
@@ -141,7 +142,8 @@ class RestrictedBoltzmannMachine():
 
         return
 
-    def get_h_given_v(self,visible_minibatch):
+    def get_h_given_v(self,visible_minibatch, sample=True):
+        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
 
         """Compute probabilities p(h|v) and activations h ~ p(h|v)
 
@@ -154,23 +156,17 @@ class RestrictedBoltzmannMachine():
            both are shaped (size of mini-batch, size of hidden layer)
         """
 
-
-        assert self.weight_vh is not None
-
         n_samples = visible_minibatch.shape[0]
-        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
 
         output_shape = (n_samples,self.ndim_hidden)
         h_given_v_prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
-        h_given_v_activation = sample_binary(h_given_v_prob)
-
-        assert h_given_v_prob.shape == output_shape
-        assert h_given_v_activation.shape == output_shape
-
+        if sample:
+            h_given_v_activation = sample_binary(h_given_v_prob)
+        else:
+            h_given_v_activation = 0  
         return h_given_v_prob, h_given_v_activation
 
-
-    def get_v_given_h(self,hidden_minibatch):
+    def get_v_given_h(self,hidden_minibatch, sample=True):
 
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
 
@@ -205,7 +201,9 @@ class RestrictedBoltzmannMachine():
             return_shape = (n_samples, self.ndim_visible)
 
             v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
-            v_activations = (np.random.random(return_shape) < v_probs)
+            if sample:
+                v_activations = (np.random.random(return_shape) < v_probs)
+            else: v_activations=0
 
         return v_probs, v_activations
 
