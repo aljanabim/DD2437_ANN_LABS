@@ -6,7 +6,6 @@ __pycache__/
 # ADDED FOR THIS PROJECT
 *.mp4
 *.png
-*.npy
 
 # C extensions
 *.so
