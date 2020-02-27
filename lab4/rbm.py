@@ -135,7 +135,7 @@ class RestrictedBoltzmannMachine():
             ratio_correct[i] = np.count_nonzero(np.abs(weight_history[i]-weight_history[i+1])<tol)/n_weights
         return ratio_correct
 
-    def update_params(self,v_0,h_0,v_k,h_k):
+    def update_params(self,v_0,h_0,v_k,h_k, use_momentum=False):
 
         """Update the weight and bias parameters.
 
@@ -152,9 +152,20 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         n_samples = v_0.shape[0]
 
-        self.delta_bias_v = self.learning_rate*np.sum(v_0-v_k,axis=0)/n_samples
-        self.delta_weight_vh = self.learning_rate*(np.dot(h_0.T,v_0).T-np.dot(h_k.T,v_k).T)/n_samples
-        self.delta_bias_h = self.learning_rate*np.sum(h_0-h_k,axis=0)/n_samples
+
+        delta_bias_v = np.sum(v_0-v_k,axis=0)/n_samples
+        delta_weight_vh = (np.dot(h_0.T,v_0).T-np.dot(h_k.T,v_k).T)/n_samples
+        delta_bias_h = np.sum(h_0-h_k,axis=0)/n_samples
+
+        if use_momentum:
+            delta_bias_v += self.momentum * self.delta_bias_v
+            delta_weight_vh += self.momentum * self.delta_weight_vh
+            delta_bias_h += self.momentum * self.delta_bias_h
+        
+        self.delta_bias_v = self.learning_rate*delta_bias_v
+        self.delta_weight_vh = self.learning_rate*delta_weight_vh
+        self.delta_bias_h = self.learning_rate*delta_bias_h
+
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -308,7 +319,6 @@ class RestrictedBoltzmannMachine():
 
             raise Error("Should never be called when on top")
 
-            pass
 
         else:
 
