@@ -109,20 +109,28 @@ class DeepBeliefNet():
         # From the top RBM, drive the network \
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
 
-        pen = np.random.binomial(1, 0.5, (1, self.sizes["pen"]))
-        pen_lbl_activations = np.concatenate((pen, lbl), axis=1)
+
+        # Propagate for initial pen
+        init_vis = np.random.binomial(1, 0.5, (1, self.sizes["vis"]))
+        _, init_hid = self.rbm_stack["vis--hid"].get_h_given_v_dir(init_vis)
+        _, init_pen = self.rbm_stack["hid--pen"].get_h_given_v_dir(init_hid)
+
+        # Randomize initial pen
+        # init_pen = np.random.binomial(1, 0.5, (1, self.sizes["pen"]))
+
+        pen_lbl_activations = np.concatenate((init_pen, lbl), axis=1)
 
         for _ in range(self.n_gibbs_gener):
             top_probs, top_activations = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activations)
             pen_lbl_probs, pen_lbl_v_activations = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activations)
             pen_lbl_activations[:, -self.rbm_stack["pen+lbl--top"].n_labels:] = true_lbl
-            print(true_lbl)
+            # print(true_lbl)
 
             pen_activations = pen_lbl_activations[:, :self.sizes["pen"]]
             hid_probs, hid_activations = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activations)
 
             vis_probs, vis_activations = self.rbm_stack["vis--hid"].get_v_given_h_dir(hid_activations)
-            vis = vis_probs
+            vis = vis_activations
 
             records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
 
