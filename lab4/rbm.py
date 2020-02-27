@@ -71,7 +71,7 @@ class RestrictedBoltzmannMachine():
         return
 
 
-    def cd1(self,visible_trainset, n_iterations=10000):
+    def cd1(self,visible_trainset, n_iterations=10000, generate_plots=False, generate_recon_err=False):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -105,15 +105,16 @@ class RestrictedBoltzmannMachine():
 
 
             # Generate reconstructed images
-            if it % self.rf["period"] == 0 and self.is_bottom:
-                viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
+            if generate_plots:
+                if it % self.rf["period"] == 0 and self.is_bottom:
+                    viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
-
-            # print progress
-            if it % self.print_period == 0:
-                self.get_reconstruction_loss(it, visible_trainset)
-            # if it+1 == n_iterations:
-            # self.get_reconstruction_loss(it, visible_trainset)
+            if generate_recon_err:
+                # print progress
+                if it % self.print_period == 0:
+                    self.get_reconstruction_loss(it, visible_trainset)
+                # if it+1 == n_iterations:
+                # self.get_reconstruction_loss(it, visible_trainset)
 
         param_stability = self.get_param_stability(weight_history)
         return self.recon_loss, param_stability
