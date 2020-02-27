@@ -80,7 +80,6 @@ class RestrictedBoltzmannMachine():
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
         print ("learning CD1")
-        visible_trainset = visible_trainset[:100]
         n_samples = visible_trainset.shape[0]
         n_minibatches = int(n_samples/self.batch_size + 0.5)
         minibatch_folds = np.array((list(range(n_minibatches))*self.batch_size)[:n_samples])
@@ -92,8 +91,8 @@ class RestrictedBoltzmannMachine():
             # print(np.min(self.weight_vh),np.max(self.weight_vh))
             weight_history[it] = np.copy(self.weight_vh)
             for fold_index in range(n_minibatches):
-                if fold_index > self.max_n_minibatches:
-                    break
+                # if fold_index > self.max_n_minibatches:
+                #     break
                 minibatch = visible_trainset[minibatch_folds == fold_index]
 
                 v_activations_0 = minibatch # could also make it binary but on quick testing it seemed not a good idea.
