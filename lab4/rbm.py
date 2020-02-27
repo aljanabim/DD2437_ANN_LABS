@@ -64,7 +64,7 @@ class RestrictedBoltzmannMachine():
             }
 
 
-        self.max_n_minibatches = 10
+        self.max_n_minibatches = 1000
         return
 
 
@@ -86,6 +86,12 @@ class RestrictedBoltzmannMachine():
         np.random.shuffle(minibatch_folds)
 
         for it in range(n_iterations):
+            # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
+            # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
+            # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
+
+            # visualize once in a while when visible layer is input images
+
             for fold_index in range(n_minibatches):
                 if fold_index > self.max_n_minibatches:
                     break
@@ -97,8 +103,8 @@ class RestrictedBoltzmannMachine():
 
                 self.update_params(v_0=v_activations_0,
                                    h_0=h_activations_0,
-                                   v_k=v_activations_1,
-                                   h_k=h_activations_1)
+                                   v_k=v_probs_1,
+                                   h_k=h_probs_1)
 
                 # print(v_activations_0.shape,h_activations_0.shape,v_probs_1.shape,h_probs_1.shape)
                 # self.update_params(v_activations_0,h_activations_0,v_probs_1,h_probs_1)
@@ -115,7 +121,6 @@ class RestrictedBoltzmannMachine():
                     # print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
 
         return
-
 
     def update_params(self,v_0,h_0,v_k,h_k):
 
@@ -172,7 +177,6 @@ class RestrictedBoltzmannMachine():
 
         return h_given_v_prob, h_given_v_activation
 
-
     def get_v_given_h(self,hidden_minibatch):
 
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
@@ -199,19 +203,26 @@ class RestrictedBoltzmannMachine():
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
 
-            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
+            # [TODO TASK 4.2] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
 
             return_shape = (n_samples, self.ndim_visible)
 
-            v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
-            v_probs_pen = v_probs[:, :-self.n_labels]
-            v_probs_lbl = v_probs[:, -self.n_labels:]
-            v_activations = (np.random.random(return_shape) < v_probs)
+            v_inputs = self.bias_v + hidden_minibatch @ self.weight_vh.T
+            v_inputs_pen = v_inputs[:, :-self.n_labels]
+            v_inputs_lbl = v_inputs[:, -self.n_labels:]
 
-            pass
+            v_probs_pen = sigmoid(v_inputs_pen)
+            v_probs_lbl = softmax(v_inputs_lbl)
+            v_probs = np.concatenate((v_probs_pen, v_probs_lbl), axis=1)
+
+            v_activations_pen = sample_binary(v_probs_pen)
+            v_activations_lbl = sample_categorical(v_probs_lbl)
+            v_activations = np.concatenate((v_activations_pen, v_activations_lbl), axis=1)
+
 
         else:
+            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)
             return_shape = (n_samples, self.ndim_visible)
             v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             v_activations = (np.random.random(return_shape) < v_probs)
@@ -219,9 +230,7 @@ class RestrictedBoltzmannMachine():
         return v_probs, v_activations
 
 
-
     """ rbm as a belief layer : the functions below do not have to be changed until running a deep belief net """
-
 
 
     def untwine_weights(self):
@@ -254,7 +263,6 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
 
         return h_probs, h_activations
-
 
     def get_v_given_h_dir(self,hidden_minibatch):
 
@@ -295,8 +303,8 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
             output_shape = (n_samples, self.ndim_visible)
-            v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
-            v_activations = (np.random.random(return_shape) < v_probs)
+            v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_h_to_v)
+            v_activations = (np.random.random(output_shape) < v_probs)
 
         return v_probs, v_activations
 
