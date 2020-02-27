@@ -67,7 +67,7 @@ class RestrictedBoltzmannMachine():
             }
 
 
-        self.max_n_minibatches = 6000
+        self.max_n_minibatches = None
         return
 
 
@@ -80,8 +80,8 @@ class RestrictedBoltzmannMachine():
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
         print ("learning CD1")
-        visible_trainset = visible_trainset[:100]
         n_samples = visible_trainset.shape[0]
+        self.max_n_minibatches = n_samples/self.batch_size
         n_minibatches = int(n_samples/self.batch_size + 0.5)
         minibatch_folds = np.array((list(range(n_minibatches))*self.batch_size)[:n_samples])
         weight_history = [None]*(n_iterations)

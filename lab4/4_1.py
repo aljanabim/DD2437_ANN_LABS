@@ -41,7 +41,7 @@ def plot_recon_error():
                                     is_top=False,
                                     n_labels=10,
                                     batch_size=20)
-        recon_loss, _ = rbm.cd1(visible_trainset=train_imgs, n_iterations=epochs)
+        recon_loss, _ = rbm.cd1(visible_trainset=train_imgs, n_iterations=epochs, generate_plots=False, generate_recon_err=True)
         print(recon_loss)
         all_recon_error[i] = np.copy(recon_loss)
         avg_recon_error[i] = recon_loss[-1]
