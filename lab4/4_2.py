@@ -3,6 +3,13 @@ from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
 import time
 
+'''
+Results:
+Batch_size 15 | iterations 800 | n_tran 600 | n_test 100 | Accu train 92.17 | Accu test 84
+Batch_size 15 | iterations 50 | n_tran 6000 | n_test 1000 | Accu train 73.30 | Accu test 70.9
+
+'''
+
 if __name__ == "__main__":
 
     image_size = [28, 28]
