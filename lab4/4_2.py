@@ -22,18 +22,18 @@ if __name__ == "__main__":
     ''' greedy layer-wise training '''
     train_start_time = time.time()
     dbn.train_greedylayerwise(vis_trainset=train_imgs,
-                              lbl_trainset=train_lbls, n_iterations=600)
+                              lbl_trainset=train_lbls, n_iterations=800)
     train_end_time = time.time()
     print("Train time: {}s".format(train_end_time - train_start_time))
 
-    dbn.recognize(train_imgs, train_lbls)
+    dbn.recognize(train_imgs[:1000], train_lbls[:1000])
 
-    dbn.recognize(test_imgs, test_lbls)
+    dbn.recognize(test_imgs[:1000], test_lbls[:1000])
 
-    # generate_start_time = time.time()
-    # for digit in range(10):
-    #     digit_1hot = np.zeros(shape=(1, 10))
-    #     digit_1hot[0, digit] = 1
-    #     dbn.generate(digit_1hot, name="rbms")
-    # generate_end_time = time.time()
-    # print("Generate time: {}s".format(generate_end_time - generate_start_time))
+    generate_start_time = time.time()
+    for digit in range(10):
+        digit_1hot = np.zeros(shape=(1, 10))
+        digit_1hot[0, digit] = 1
+        dbn.generate(digit_1hot, name="rbms")
+    generate_end_time = time.time()
+    print("Generate time: {}s".format(generate_end_time - generate_start_time))
