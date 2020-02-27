@@ -71,7 +71,7 @@ class RestrictedBoltzmannMachine():
         return
 
 
-    def cd1(self,visible_trainset, n_iterations=10000, generate_plots=False, generate_recon_err=False):
+    def cd1(self,visible_trainset, n_iterations=10000, generate_plots=False, generate_recon_err=False, use_momentum=False):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -80,6 +80,7 @@ class RestrictedBoltzmannMachine():
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
         print ("learning CD1")
+        self.use_momentum = use_momentum
         n_samples = visible_trainset.shape[0]
         self.max_n_minibatches = n_samples/self.batch_size
         n_minibatches = int(n_samples/self.batch_size + 0.5)
@@ -135,7 +136,7 @@ class RestrictedBoltzmannMachine():
             ratio_correct[i] = np.count_nonzero(np.abs(weight_history[i]-weight_history[i+1])<tol)/n_weights
         return ratio_correct
 
-    def update_params(self,v_0,h_0,v_k,h_k, use_momentum=False):
+    def update_params(self,v_0,h_0,v_k,h_k):
 
         """Update the weight and bias parameters.
 
@@ -157,7 +158,7 @@ class RestrictedBoltzmannMachine():
         delta_weight_vh = (np.dot(h_0.T,v_0).T-np.dot(h_k.T,v_k).T)/n_samples
         delta_bias_h = np.sum(h_0-h_k,axis=0)/n_samples
 
-        if use_momentum:
+        if self.use_momentum:
             delta_bias_v += self.momentum * self.delta_bias_v
             delta_weight_vh += self.momentum * self.delta_weight_vh
             delta_bias_h += self.momentum * self.delta_bias_h
