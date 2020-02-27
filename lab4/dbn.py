@@ -53,7 +53,6 @@ class DeepBeliefNet():
         return
 
     def recognize(self,true_img,true_lbl):
-
         """Recognize/Classify the data into label categories and calculate the accuracy
 
         Args:
@@ -105,13 +104,13 @@ class DeepBeliefNet():
         ax.set_xticks([]); ax.set_yticks([])
 
         lbl = true_lbl
-        pen = np.random.normal(0, 0.1, self.sizes["pen"])
-        pen_lbl = np.concatenate((pen, lbl), axis=None)
-        pen_lbl_activations = np.reshape(pen_lbl, (1, -1))
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM.
         # From the top RBM, drive the network \
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
+
+        pen = np.random.binomial(1, 0.5, (1, self.sizes["pen"]))
+        pen_lbl_activations = np.concatenate((pen, lbl), axis=1)
 
         for _ in range(self.n_gibbs_gener):
             top_probs, top_activations = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activations)
@@ -122,8 +121,7 @@ class DeepBeliefNet():
             hid_probs, hid_activations = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activations)
 
             vis_probs, vis_activations = self.rbm_stack["vis--hid"].get_v_given_h_dir(hid_activations)
-
-            vis = vis_activations
+            vis = vis_probs
 
             records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
 
