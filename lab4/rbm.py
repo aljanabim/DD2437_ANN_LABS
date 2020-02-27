@@ -71,7 +71,7 @@ class RestrictedBoltzmannMachine():
         return
 
 
-    def cd1(self,visible_trainset, n_iterations=10000, generate_plots=False, generate_recon_err=False):
+    def cd1(self,visible_trainset, n_iterations=10000, generate_plots=False, generate_recon_err=False, use_momentum=False):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -80,6 +80,7 @@ class RestrictedBoltzmannMachine():
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
         print ("learning CD1")
+        self.use_momentum = use_momentum
         n_samples = visible_trainset.shape[0]
         self.max_n_minibatches = n_samples/self.batch_size
         n_minibatches = int(n_samples/self.batch_size + 0.5)
@@ -152,9 +153,20 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         n_samples = v_0.shape[0]
 
-        self.delta_bias_v = self.learning_rate*np.sum(v_0-v_k,axis=0)/n_samples
-        self.delta_weight_vh = self.learning_rate*(np.dot(h_0.T,v_0).T-np.dot(h_k.T,v_k).T)/n_samples
-        self.delta_bias_h = self.learning_rate*np.sum(h_0-h_k,axis=0)/n_samples
+
+        delta_bias_v = np.sum(v_0-v_k,axis=0)/n_samples
+        delta_weight_vh = (np.dot(h_0.T,v_0).T-np.dot(h_k.T,v_k).T)/n_samples
+        delta_bias_h = np.sum(h_0-h_k,axis=0)/n_samples
+
+        if self.use_momentum:
+            delta_bias_v += self.momentum * self.delta_bias_v
+            delta_weight_vh += self.momentum * self.delta_weight_vh
+            delta_bias_h += self.momentum * self.delta_bias_h
+        
+        self.delta_bias_v = self.learning_rate*delta_bias_v
+        self.delta_weight_vh = self.learning_rate*delta_weight_vh
+        self.delta_bias_h = self.learning_rate*delta_bias_h
+
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -308,7 +320,6 @@ class RestrictedBoltzmannMachine():
 
             raise Error("Should never be called when on top")
 
-            pass
 
         else:
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
