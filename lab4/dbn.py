@@ -116,6 +116,7 @@ class DeepBeliefNet():
             top_probs, top_activations = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activations)
             pen_lbl_probs, pen_lbl_v_activations = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activations)
             pen_lbl_activations[:, -self.rbm_stack["pen+lbl--top"].n_labels:] = true_lbl
+            print(true_lbl)
 
             pen_activations = pen_lbl_activations[:, :self.sizes["pen"]]
             hid_probs, hid_activations = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activations)

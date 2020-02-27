@@ -7,7 +7,10 @@ if __name__ == "__main__":
 
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(
-        dim=image_size, n_train=600, n_test=100)
+        dim=image_size, n_train=600, n_test=600)
+
+    print(train_imgs.shape)
+    print(test_imgs.shape)
 
     ''' deep- belief net '''
 
@@ -22,13 +25,13 @@ if __name__ == "__main__":
     ''' greedy layer-wise training '''
     train_start_time = time.time()
     dbn.train_greedylayerwise(vis_trainset=train_imgs,
-                              lbl_trainset=train_lbls, n_iterations=800)
+                              lbl_trainset=train_lbls, n_iterations=400)
     train_end_time = time.time()
     print("Train time: {}s".format(train_end_time - train_start_time))
 
-    dbn.recognize(train_imgs[:1000], train_lbls[:1000])
+    dbn.recognize(train_imgs, train_lbls)
 
-    dbn.recognize(test_imgs[:1000], test_lbls[:1000])
+    dbn.recognize(test_imgs, test_lbls)
 
     generate_start_time = time.time()
     for digit in range(10):

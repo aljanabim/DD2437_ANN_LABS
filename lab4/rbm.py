@@ -235,7 +235,7 @@ class RestrictedBoltzmannMachine():
             return_shape = (n_samples, self.ndim_visible)
             v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             if sample:
-                v_activations = (np.random.random(return_shape) < v_probs)
+                v_activations = sample_binary(v_probs)
             else: v_activations=0
 
         return v_probs, v_activations
@@ -311,11 +311,10 @@ class RestrictedBoltzmannMachine():
             pass
 
         else:
-
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
             output_shape = (n_samples, self.ndim_visible)
             v_probs = sigmoid(self.bias_v + hidden_minibatch @ self.weight_h_to_v)
-            v_activations = (np.random.random(output_shape) < v_probs)
+            v_activations = sample_binary(v_probs)
 
         return v_probs, v_activations
 
