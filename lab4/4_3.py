@@ -5,11 +5,7 @@ import time
 
 '''
 Results:
-Batch_size 15 | iterations 800 | n_tran 600 | n_test 100 | Accu train 92.17 | Accu test 84
-Batch_size 15 | iterations 50 | n_tran 6000 | n_test 1000 | Accu train 73.30 | Accu test 70.9
-Batch_size 15 | iterations 100 | n_tran 6000 | n_test 1000 | Accu train 80.20 | Accu test 73.30
-Batch_size 15 | iterations 300 | n_tran 6000 | n_test 1000 | Accu train 82.70 | Accu test 76.50
-Batch_size 15 | iterations 500 | n_tran 6000 | n_test 1000 | Accu train 83.20 | Accu test 77.70
+Batch_size  | iterations  | n_tran  | n_test  | Accu train | Accu test 
 
 '''
 
@@ -18,9 +14,6 @@ if __name__ == "__main__":
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(
         dim=image_size, n_train=600, n_test=600)
-
-    print(train_imgs.shape)
-    print(test_imgs.shape)
 
     ''' deep- belief net '''
 
@@ -32,9 +25,11 @@ if __name__ == "__main__":
                         batch_size=15
                         )
 
-    ''' greedy layer-wise training '''
+    ''' fine-tune wake-sleep training '''
     train_start_time = time.time()
     dbn.train_greedylayerwise(vis_trainset=train_imgs,
+                              lbl_trainset=train_lbls, n_iterations=400)
+    dbn.train_wakesleep_finetune(vis_trainset=train_imgs,
                               lbl_trainset=train_lbls, n_iterations=400)
     train_end_time = time.time()
     print("Train time: {}s".format(train_end_time - train_start_time))
@@ -47,6 +42,6 @@ if __name__ == "__main__":
     for digit in range(10):
         digit_1hot = np.zeros(shape=(1, 10))
         digit_1hot[0, digit] = 1
-        dbn.generate(digit_1hot, name="rbms")
+        dbn.generate(digit_1hot, name="dbn")
     generate_end_time = time.time()
     print("Generate time: {}s".format(generate_end_time - generate_start_time))
