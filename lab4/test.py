@@ -52,3 +52,39 @@ self.n_samples = vis_trainset.shape[0]
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params' method from rbm class.
                     
                     # WAKE PHASE
+
+
+
+        """Recognize/Classify the data into label categories and calculate the accuracy
+
+        Args:
+          true_imgs: visible data shaped (number of samples, size of visible layer)
+          true_lbl: true labels shaped (number of samples, size of label layer). Used only for calculating accuracy, not driving the net
+        """
+
+        n_samples = true_img.shape[0]
+
+        vis = true_img # visible layer gets the image data
+
+        lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels
+
+        # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top.
+        # In the top RBM, run alternating Gibbs sampling \
+        # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
+        # NOTE : inferring entire train/test set may require too much compute memory (depends on your system).
+        # In that case, divide into mini-batches.
+
+        vis_activations = vis
+        hid_probs, hid_activations = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_activations)
+        pen_probs, pen_activations = self.rbm_stack["hid--pen"].get_h_given_v_dir(hid_activations)
+        pen_lbl_activations = np.concatenate((pen_activations, lbl), axis=1)
+
+        for _ in range(self.n_gibbs_recog):
+            top_probs, top_activations = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activations)
+            pen_lbl_probs, pen_lbl_activations = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activations)
+
+        predicted_lbl = pen_lbl_activations[:, -self.sizes["lbl"]:]
+
+        print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl,axis=1)==np.argmax(true_lbl,axis=1))))
+
+        return
