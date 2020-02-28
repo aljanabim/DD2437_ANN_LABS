@@ -282,32 +282,32 @@ class DeepBeliefNet():
 
     def loadfromfile_rbm(self,loc,name):
 
-        self.rbm_stack[name].weight_vh = np.load("%s/rbm.%s.weight_vh.npy"%(loc,name))
-        self.rbm_stack[name].bias_v    = np.load("%s/rbm.%s.bias_v.npy"%(loc,name))
-        self.rbm_stack[name].bias_h    = np.load("%s/rbm.%s.bias_h.npy"%(loc,name))
+        self.rbm_stack[name].weight_vh = np.load("%s/rbm.%s.weight_vh_small.npy"%(loc,name))
+        self.rbm_stack[name].bias_v    = np.load("%s/rbm.%s.bias_v_small.npy"%(loc,name))
+        self.rbm_stack[name].bias_h    = np.load("%s/rbm.%s.bias_h_small.npy"%(loc,name))
         print ("loaded rbm[%s] from %s"%(name,loc))
         return
 
     def savetofile_rbm(self,loc,name):
 
-        np.save("%s/rbm.%s.weight_vh"%(loc,name), self.rbm_stack[name].weight_vh)
-        np.save("%s/rbm.%s.bias_v"%(loc,name),    self.rbm_stack[name].bias_v)
-        np.save("%s/rbm.%s.bias_h"%(loc,name),    self.rbm_stack[name].bias_h)
+        np.save("%s/rbm.%s.weight_vh_small"%(loc,name), self.rbm_stack[name].weight_vh)
+        np.save("%s/rbm.%s.bias_v_small"%(loc,name),    self.rbm_stack[name].bias_v)
+        np.save("%s/rbm.%s.bias_h_small"%(loc,name),    self.rbm_stack[name].bias_h)
         return
 
     def loadfromfile_dbn(self,loc,name):
 
-        self.rbm_stack[name].weight_v_to_h = np.load("%s/dbn.%s.weight_v_to_h.npy"%(loc,name))
-        self.rbm_stack[name].weight_h_to_v = np.load("%s/dbn.%s.weight_h_to_v.npy"%(loc,name))
-        self.rbm_stack[name].bias_v        = np.load("%s/dbn.%s.bias_v.npy"%(loc,name))
-        self.rbm_stack[name].bias_h        = np.load("%s/dbn.%s.bias_h.npy"%(loc,name))
+        self.rbm_stack[name].weight_v_to_h = np.load("%s/dbn.%s.weight_v_to_h_small.npy"%(loc,name))
+        self.rbm_stack[name].weight_h_to_v = np.load("%s/dbn.%s.weight_h_to_v_small.npy"%(loc,name))
+        self.rbm_stack[name].bias_v        = np.load("%s/dbn.%s.bias_v_small.npy"%(loc,name))
+        self.rbm_stack[name].bias_h        = np.load("%s/dbn.%s.bias_h_small.npy"%(loc,name))
         print ("loaded rbm[%s] from %s"%(name,loc))
         return
 
     def savetofile_dbn(self,loc,name):
 
-        np.save("%s/dbn.%s.weight_v_to_h"%(loc,name), self.rbm_stack[name].weight_v_to_h)
-        np.save("%s/dbn.%s.weight_h_to_v"%(loc,name), self.rbm_stack[name].weight_h_to_v)
-        np.save("%s/dbn.%s.bias_v"%(loc,name),        self.rbm_stack[name].bias_v)
-        np.save("%s/dbn.%s.bias_h"%(loc,name),        self.rbm_stack[name].bias_h)
+        np.save("%s/dbn.%s.weight_v_to_h_small"%(loc,name), self.rbm_stack[name].weight_v_to_h)
+        np.save("%s/dbn.%s.weight_h_to_v_small"%(loc,name), self.rbm_stack[name].weight_h_to_v)
+        np.save("%s/dbn.%s.bias_v_small"%(loc,name),        self.rbm_stack[name].bias_v)
+        np.save("%s/dbn.%s.bias_h_small"%(loc,name),        self.rbm_stack[name].bias_h)
         return

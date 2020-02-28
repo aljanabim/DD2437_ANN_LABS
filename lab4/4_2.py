@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(
-        dim=image_size, n_train=600, n_test=100)
+        dim=image_size, n_train=6000, n_test=1000)
 
     ''' deep- belief net '''
 
@@ -39,11 +39,23 @@ if __name__ == "__main__":
     dbn.recognize(train_imgs, train_lbls)
 
     dbn.recognize(test_imgs, test_lbls)
-    # 
-    # generate_start_time = time.time()
-    # for digit in range(10):
-    #     digit_1hot = np.zeros(shape=(1, 10))
-    #     digit_1hot[0, digit] = 1
-    #     dbn.generate(digit_1hot, name="rbms")
-    # generate_end_time = time.time()
-    # print("Generate time: {}s".format(generate_end_time - generate_start_time))
+
+    generate_start_time = time.time()
+    all_last = []
+    for digit in range(10):
+        print("Generating number",digit)
+        digit_1hot = np.zeros(shape=(1, 10))
+        digit_1hot[0, digit] = 1
+        all_last.append(dbn.generate(digit_1hot, name="rbms"))
+    
+    plt.close('all')
+    # all_last=[np.random.randint(0,2,(5,5)) for i in range(10)]
+    for i, img in enumerate(all_last):
+        plt.subplot(2,5,i+1)
+        plt.imshow(img, cmap='Greys', interpolation=None)
+        plt.xticks([]);
+        plt.yticks([]);
+        plt.xlabel(i)
+    plt.savefig('plots/gen_4_2_samples6000iter800.pdf')
+    generate_end_time = time.time()
+    print("Generate time: {}s".format(generate_end_time - generate_start_time))

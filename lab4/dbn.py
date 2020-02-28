@@ -101,6 +101,7 @@ class DeepBeliefNet():
         n_sample = true_lbl.shape[0]
 
         records = []
+        records_last = 0
         fig,ax = plt.subplots(1,1,figsize=(3,3))
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         ax.set_xticks([]); ax.set_yticks([])
@@ -124,7 +125,7 @@ class DeepBeliefNet():
 
         for _ in range(self.n_gibbs_gener):
             top_probs, top_activations = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activations)
-            pen_lbl_probs, pen_lbl_v_activations = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activations)
+            pen_lbl_probs, pen_lbl_activations = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activations)
             pen_lbl_activations[:, -self.rbm_stack["pen+lbl--top"].n_labels:] = true_lbl
             # print(true_lbl)
 
@@ -132,13 +133,13 @@ class DeepBeliefNet():
             hid_probs, hid_activations = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activations)
 
             vis_probs, vis_activations = self.rbm_stack["vis--hid"].get_v_given_h_dir(hid_activations)
-            vis = vis_activations
+            vis = vis_probs
 
-            records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
+            # records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
+        records_last = vis.reshape(self.image_size)
+        # anim = stitch_video(fig,records).save("animations/%s.generate%d.mp4"%(name,np.argmax(true_lbl)))
 
-        anim = stitch_video(fig,records).save("animations/%s.generate%d.mp4"%(name,np.argmax(true_lbl)))
-
-        return
+        return records_last
 
     def train_greedylayerwise(self, vis_trainset, lbl_trainset, n_iterations):
 

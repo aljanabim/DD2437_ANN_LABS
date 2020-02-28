@@ -116,6 +116,22 @@ def viz_rf(weights,it,grid):
     plt.savefig("plots/rf.iter%06d.png"%it)
     plt.close('all')
 
+def viz_gen(weights,grid):
+
+    """
+    Visualize receptive fields and save 
+    """
+    fig, axs = plt.subplots(grid[0],grid[1],figsize=(grid[1],grid[0]))#,constrained_layout=True)
+    plt.subplots_adjust(left=0,bottom=0,right=1,top=1,wspace=0,hspace=0)        
+    imax = abs(weights).max()
+    for x in range(grid[0]):
+        for y in range(grid[1]):
+            axs[x,y].set_xticks([]);
+            axs[x,y].set_yticks([]);
+            axs[x,y].imshow(weights[:,:,y+grid[1]*x], cmap="Greys", interpolation=None)
+    plt.savefig("plots/gen_pics.pdf")
+    plt.close('all')
+
 def stitch_video(fig,imgs):
     """
     Stitches a list of images and returns a animation object

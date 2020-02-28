@@ -54,7 +54,7 @@ class RestrictedBoltzmannMachine():
 
         self.weight_h_to_v = None
 
-        self.learning_rate = 0.0001
+        self.learning_rate = 0.01
 
         self.momentum = 0.7
 
@@ -343,7 +343,7 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
 
-        n_samples = inps.shape[0]
+        n_samples = 1 #inps.shape[0]
         self.delta_weight_h_to_v = self.learning_rate*(inps.T @ (trgs-preds))/n_samples
         self.delta_bias_v = self.learning_rate*np.sum(trgs-preds,axis=0)/n_samples
 
@@ -365,7 +365,7 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        n_samples = 1#inps.shape[0]
+        n_samples = 1 #inps.shape[0]
         self.delta_weight_v_to_h = self.learning_rate*(inps.T @ (trgs-preds))/n_samples
         self.delta_bias_h = self.learning_rate*np.sum(trgs-preds,axis=0)/n_samples
 
