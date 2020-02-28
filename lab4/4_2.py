@@ -10,7 +10,8 @@ Batch_size 15 | iterations 50 | n_tran 6000 | n_test 1000 | Accu train 73.30 | A
 Batch_size 15 | iterations 100 | n_tran 6000 | n_test 1000 | Accu train 80.20 | Accu test 73.30
 Batch_size 15 | iterations 300 | n_tran 6000 | n_test 1000 | Accu train 82.70 | Accu test 76.50
 Batch_size 15 | iterations 500 | n_tran 6000 | n_test 1000 | Accu train 83.20 | Accu test 77.70
-
+Batch_size 15 | iterations 800 | n_tran 6000 | n_test 1000 | Accu train 83.90 | Accu test 80.30
+Batch_size 15 | iterations 2000 | n_tran 6000 | n_test 1000 | Accu train 83.20 | Accu test 76.90
 '''
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(
-        dim=image_size, n_train=600, n_test=100)
+        dim=image_size, n_train=6000, n_test=1000)
 
     ''' deep- belief net '''
 
