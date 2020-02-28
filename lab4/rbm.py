@@ -54,7 +54,7 @@ class RestrictedBoltzmannMachine():
 
         self.weight_h_to_v = None
 
-        self.learning_rate = 0.01
+        self.learning_rate = 0.0001
 
         self.momentum = 0.7
 
@@ -66,7 +66,7 @@ class RestrictedBoltzmannMachine():
             "ids" : np.random.randint(0,self.ndim_hidden,25) # pick some random hidden units
             }
 
-
+        self.use_momentum = False
         self.max_n_minibatches = None
         return
 
@@ -300,7 +300,7 @@ class RestrictedBoltzmannMachine():
            tuple ( p(v|h) , v)
            both are shaped (size of mini-batch, size of visible layer)
         """
-
+        
         assert self.weight_h_to_v is not None
 
         n_samples = hidden_minibatch.shape[0]
@@ -342,8 +342,10 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        self.delta_weight_h_to_v += 0
-        self.delta_bias_v += 0
+
+        n_samples = inps.shape[0]
+        self.delta_weight_h_to_v = self.learning_rate*(inps.T @ (trgs-preds))/n_samples
+        self.delta_bias_v = self.learning_rate*np.sum(trgs-preds,axis=0)/n_samples
 
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
@@ -363,8 +365,9 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        self.delta_weight_v_to_h += 0
-        self.delta_bias_h += 0
+        n_samples = 1#inps.shape[0]
+        self.delta_weight_v_to_h = self.learning_rate*(inps.T @ (trgs-preds))/n_samples
+        self.delta_bias_h = self.learning_rate*np.sum(trgs-preds,axis=0)/n_samples
 
         self.weight_v_to_h += self.delta_weight_v_to_h
         self.bias_h += self.delta_bias_h
