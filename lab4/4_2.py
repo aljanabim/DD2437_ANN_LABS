@@ -9,7 +9,11 @@ plt.style.use('ggplot')
 Results:
 Batch_size 15 | iterations 800 | n_tran 600 | n_test 100 | Accu train 92.17 | Accu test 84
 Batch_size 15 | iterations 50 | n_tran 6000 | n_test 1000 | Accu train 73.30 | Accu test 70.9
-
+Batch_size 15 | iterations 100 | n_tran 6000 | n_test 1000 | Accu train 80.20 | Accu test 73.30
+Batch_size 15 | iterations 300 | n_tran 6000 | n_test 1000 | Accu train 82.70 | Accu test 76.50
+Batch_size 15 | iterations 500 | n_tran 6000 | n_test 1000 | Accu train 83.20 | Accu test 77.70
+Batch_size 15 | iterations 800 | n_tran 6000 | n_test 1000 | Accu train 83.90 | Accu test 80.30
+Batch_size 15 | iterations 2000 | n_tran 6000 | n_test 1000 | Accu train 83.20 | Accu test 76.90
 '''
 
 if __name__ == "__main__":
@@ -58,6 +62,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
+<<<<<<< HEAD
 
     generate_start_time = time.time()
     for digit in range(10):
@@ -66,3 +71,14 @@ if __name__ == "__main__":
         dbn.generate(digit_1hot, name="rbms")
     generate_end_time = time.time()
     print("Generate time: {}s".format(generate_end_time - generate_start_time))
+=======
+    dbn.recognize(test_imgs, test_lbls)
+    # 
+    # generate_start_time = time.time()
+    # for digit in range(10):
+    #     digit_1hot = np.zeros(shape=(1, 10))
+    #     digit_1hot[0, digit] = 1
+    #     dbn.generate(digit_1hot, name="rbms")
+    # generate_end_time = time.time()
+    # print("Generate time: {}s".format(generate_end_time - generate_start_time))
+>>>>>>> 7eff1a4841f8c7bb4a59533e7c036d8b6d867782
